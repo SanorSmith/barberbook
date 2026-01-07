@@ -19,12 +19,16 @@ export async function getAvailableSlots(
 ): Promise<TimeSlot[]> {
   const supabase = createClient()
   
+  console.log('getAvailableSlots called with:', { barberId, date, serviceDuration })
+  
   // Get day of week (0 = Sunday, 6 = Saturday)
   const selectedDate = new Date(date)
   const dayOfWeek = selectedDate.getDay()
+  
+  console.log('Day of week:', dayOfWeek)
 
   // Get barber's working hours for this day
-  const { data: workingHours } = await supabase
+  const { data: workingHours, error: whError } = await supabase
     .from('working_hours')
     .select('*')
     .eq('barber_id', barberId)
@@ -32,8 +36,12 @@ export async function getAvailableSlots(
     .eq('is_available', true)
     .single()
 
+  console.log('Working hours query result:', { workingHours, error: whError })
+
   if (!workingHours) {
-    return []
+    console.log('No working hours found, generating default slots')
+    // If no working hours defined, generate default 9am-5pm slots
+    return generateDefaultSlots(serviceDuration)
   }
 
   // Check if barber has time off on this date
@@ -49,12 +57,14 @@ export async function getAvailableSlots(
   }
 
   // Get existing bookings for this barber on this date
-  const { data: bookings } = await supabase
+  const { data: bookings, error: bookingsError } = await supabase
     .from('bookings')
     .select('booking_time, services(duration)')
     .eq('barber_id', barberId)
     .eq('booking_date', date)
     .in('status', ['pending', 'confirmed'])
+  
+  console.log('Bookings query result:', { bookings, error: bookingsError })
 
   // Generate time slots
   const slots: TimeSlot[] = []
@@ -155,4 +165,23 @@ function formatTime(minutes: number): string {
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+}
+
+function generateDefaultSlots(serviceDuration: number): TimeSlot[] {
+  const slots: TimeSlot[] = []
+  const startTime = 9 * 60 // 9:00 AM
+  const endTime = 17 * 60 // 5:00 PM
+  const slotInterval = 15 // 15-minute intervals
+
+  let currentTime = startTime
+
+  while (currentTime + serviceDuration <= endTime) {
+    slots.push({
+      time: formatTime(currentTime),
+      available: true
+    })
+    currentTime += slotInterval
+  }
+
+  return slots
 }

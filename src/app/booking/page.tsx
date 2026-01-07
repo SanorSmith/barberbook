@@ -35,6 +35,7 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (step === 3 && selectedBarber && selectedService && selectedDate) {
+      console.log('Loading slots for:', { barberId: selectedBarber.id, date: selectedDate, duration: selectedService.duration })
       loadAvailableSlots()
     }
   }, [step, selectedBarber, selectedService, selectedDate])
@@ -63,18 +64,30 @@ export default function BookingPage() {
   }
 
   const loadAvailableSlots = async () => {
-    if (!selectedBarber || !selectedService || !selectedDate) return
+    if (!selectedBarber || !selectedService || !selectedDate) {
+      console.log('Missing required data for slots:', { barber: !!selectedBarber, service: !!selectedService, date: !!selectedDate })
+      return
+    }
     
     setLoading(true)
     try {
+      console.log('Calling getAvailableSlots...')
       const slots = await getAvailableSlots(
         selectedBarber.id,
         selectedDate,
         selectedService.duration
       )
+      console.log('Received slots:', slots)
       setAvailableSlots(slots)
+      
+      if (slots.length === 0) {
+        setError('No available time slots for this date. Please try another date.')
+      } else {
+        setError(null)
+      }
     } catch (err) {
       console.error('Failed to load slots:', err)
+      setError('Failed to load available times. Please try again.')
     }
     setLoading(false)
   }
