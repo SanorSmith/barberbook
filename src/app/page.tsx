@@ -1,101 +1,134 @@
-import Image from "next/image";
+import Link from 'next/link'
+import Image from 'next/image'
+import { services, barbers } from '@/lib/data'
+import ServiceCard from '@/components/ServiceCard'
+import BarberCard from '@/components/BarberCard'
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
+    <>
+      {/* Hero Section */}
+      <div className="relative h-screen -mt-20">
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
         <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
+          src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920"
+          alt="Barber Shop"
+          fill
+          className="object-cover"
           priority
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="relative z-20 h-full flex flex-col justify-center items-center text-center px-4">
+          <p className="text-gold tracking-[0.2em] text-sm font-semibold mb-4">ESTABLISHED 2024</p>
+          <h1 className="font-serif text-5xl md:text-6xl font-semibold text-cream mb-6 tracking-tight">
+            The Art of the Perfect Cut
+          </h1>
+          <p className="text-xl text-gray-300 max-w-2xl mb-10 font-light">
+            Premium grooming experience for the modern gentleman
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link 
+              href="/booking" 
+              className="bg-gold hover:bg-gold-hover text-obsidian px-8 py-4 rounded-lg text-sm font-semibold uppercase tracking-wider transition-transform hover:scale-105"
+            >
+              Book Appointment
+            </Link>
+            <Link 
+              href="/services" 
+              className="bg-transparent border border-gold text-gold hover:bg-gold/10 px-8 py-4 rounded-lg text-sm font-semibold uppercase tracking-wider transition-transform hover:scale-105"
+            >
+              Explore Services
+            </Link>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
+          <svg className="w-6 h-6 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Services Preview */}
+      <section className="py-24 bg-obsidian px-4 md:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <p className="text-gold text-xs font-bold tracking-[0.2em] uppercase mb-3">What We Offer</p>
+          <h2 className="font-serif text-4xl text-cream font-medium tracking-tight">Premium Services</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {services.map((service) => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </section>
+
+      {/* Barbers Section */}
+      <section className="py-24 bg-charcoal">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="text-center mb-16">
+            <p className="text-gold text-xs font-bold tracking-[0.2em] uppercase mb-3">The Team</p>
+            <h2 className="font-serif text-4xl text-cream font-medium tracking-tight">Master Barbers</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {barbers.map((barber) => (
+              <BarberCard key={barber.id} barber={barber} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 bg-obsidian border-t border-slate">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-center font-serif text-3xl text-cream font-medium mb-16">Book in 60 Seconds</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+            <div className="hidden md:block absolute top-8 left-0 w-full h-0.5 bg-slate -z-0"></div>
+            {[
+              { icon: 'list', title: 'Choose Service', desc: 'Select from our premium offerings' },
+              { icon: 'user', title: 'Pick Barber', desc: 'Choose your preferred stylist' },
+              { icon: 'calendar', title: 'Select Time', desc: 'Find your perfect slot' },
+              { icon: 'check', title: 'Confirm', desc: "You're all set" }
+            ].map((step, i) => (
+              <div key={i} className="relative z-10 flex flex-col items-center text-center bg-obsidian p-4">
+                <div className="w-16 h-16 rounded-full bg-charcoal border border-gold flex items-center justify-center text-gold mb-6 shadow-[0_0_15px_rgba(201,162,39,0.2)]">
+                  <StepIcon icon={step.icon} />
+                </div>
+                <h4 className="text-cream font-semibold mb-2">{step.title}</h4>
+                <p className="text-silver text-sm">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  )
+}
+
+function StepIcon({ icon }: { icon: string }) {
+  switch (icon) {
+    case 'list':
+      return (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg>
+      )
+    case 'user':
+      return (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      )
+    case 'calendar':
+      return (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      )
+    case 'check':
+      return (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
+        </svg>
+      )
+    default:
+      return null
+  }
 }

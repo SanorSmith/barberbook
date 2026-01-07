@@ -34,3 +34,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Additional ignores for BarberBook
+# Supabase service role key (keep .env.local for local dev)
+.env.local
+.env.production
+
+# Debug SQL files
+*.sql
+!supabase/schema.sql
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db

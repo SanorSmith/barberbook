@@ -1,0 +1,1158 @@
+<html lang="en" class="scroll-smooth"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberBook - Premium Grooming</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconify -->
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: '#0D0D0D',
+                        charcoal: '#1A1A1A',
+                        slate: '#2D2D2D',
+                        gold: {
+                            DEFAULT: '#C9A227',
+                            hover: '#D4AF37',
+                            dim: 'rgba(201,162,39,0.15)'
+                        },
+                        cream: '#F5F0E6',
+                        silver: '#9CA3AF',
+                        success: '#22C55E',
+                        warning: '#F59E0B',
+                        error: '#EF4444'
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    fontSize: {
+                        'xs': '0.75rem',
+                        'sm': '0.875rem',
+                        'base': '1rem',
+                        'lg': '1.125rem',
+                        'xl': '1.25rem',
+                        '2xl': '1.5rem',
+                        '3xl': '1.875rem',
+                        '4xl': '2.25rem',
+                        '5xl': '3rem',
+                        '6xl': '4rem',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles */
+        body {
+            background-color: #0D0D0D;
+            color: #F5F0E6;
+        }
+        
+        .iconify {
+            stroke-width: 1.5px !important;
+        }
+
+        /* Hide scrollbar for clean look in some areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Smooth transitions */
+        .page-transition {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        /* Checkbox/Radio custom styling */
+        input[type="checkbox"]:checked, input[type="radio"]:checked {
+            accent-color: #C9A227;
+        }
+
+        /* Glass effect */
+        .glass {
+            background: rgba(13, 13, 13, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-gold selection:text-obsidian flex flex-col min-h-screen">
+
+    <!-- NAVIGATION (Fixed) -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 glass border-b border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 cursor-pointer" onclick="router.navigate('home')">
+                    <span class="font-serif text-2xl font-semibold tracking-tight text-gold">BARBERBOOK</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a onclick="router.navigate('services')" class="cursor-pointer hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">Services</a>
+                        <a onclick="router.navigate('barbers')" class="cursor-pointer hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">Barbers</a>
+                        <a href="#about" class="cursor-pointer hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">About</a>
+                        <a href="#contact" class="cursor-pointer hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">Contact</a>
+                    </div>
+                </div>
+
+                <!-- Right Buttons -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a onclick="router.navigate('login')" class="cursor-pointer text-sm font-medium hover:text-gold transition-colors">Login</a>
+                    <button onclick="router.navigate('booking')" class="bg-gold hover:bg-gold-hover text-obsidian px-6 py-2.5 rounded-lg text-sm font-medium uppercase tracking-wider transition-transform hover:scale-105">
+                        Book Now
+                    </button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-cream hover:text-gold p-2">
+                        <span class="iconify" data-icon="lucide:menu" data-width="24"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu (Hidden by default) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-charcoal border-b border-slate">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a onclick="router.navigate('services')" class="block px-3 py-3 text-base font-medium hover:text-gold">Services</a>
+                <a onclick="router.navigate('barbers')" class="block px-3 py-3 text-base font-medium hover:text-gold">Barbers</a>
+                <a onclick="router.navigate('login')" class="block px-3 py-3 text-base font-medium hover:text-gold">Login</a>
+                <button onclick="router.navigate('booking')" class="w-full mt-4 bg-gold text-obsidian py-3 rounded-lg font-medium uppercase">Book Now</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- APP CONTENT CONTAINER -->
+    <main id="app" class="flex-grow pt-20">
+        <!-- Pages will be injected/toggled here -->
+    </main>
+
+    <!-- FOOTER -->
+    <footer id="footer" class="bg-obsidian border-t border-slate pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div class="col-span-1">
+                    <span class="font-serif text-2xl font-semibold tracking-tight text-gold block mb-6">BARBERBOOK</span>
+                    <p class="text-silver text-sm leading-relaxed mb-6">Premium grooming experiences for the modern gentleman. Precision cuts, hot towel shaves, and a legacy of style.</p>
+                    <div class="flex space-x-4">
+                        <span class="iconify text-silver hover:text-gold cursor-pointer" data-icon="lucide:instagram" data-width="20"></span>
+                        <span class="iconify text-silver hover:text-gold cursor-pointer" data-icon="lucide:facebook" data-width="20"></span>
+                        <span class="iconify text-silver hover:text-gold cursor-pointer" data-icon="lucide:twitter" data-width="20"></span>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-cream font-semibold tracking-tight mb-6">Quick Links</h4>
+                    <ul class="space-y-3 text-sm text-silver">
+                        <li><a onclick="router.navigate('services')" class="hover:text-gold cursor-pointer">Services</a></li>
+                        <li><a onclick="router.navigate('barbers')" class="hover:text-gold cursor-pointer">Our Barbers</a></li>
+                        <li><a onclick="router.navigate('booking')" class="hover:text-gold cursor-pointer">Book Now</a></li>
+                        <li><a href="#" class="hover:text-gold cursor-pointer">About Us</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-cream font-semibold tracking-tight mb-6">Contact</h4>
+                    <ul class="space-y-3 text-sm text-silver">
+                        <li class="flex items-start"><span class="iconify mr-3 mt-0.5 text-gold" data-icon="lucide:map-pin"></span> 123 Heritage Ave, New York, NY</li>
+                        <li class="flex items-center"><span class="iconify mr-3 text-gold" data-icon="lucide:phone"></span> (212) 555-0199</li>
+                        <li class="flex items-center"><span class="iconify mr-3 text-gold" data-icon="lucide:mail"></span> bookings@barberbook.com</li>
+                        <li class="flex items-center"><span class="iconify mr-3 text-gold" data-icon="lucide:clock"></span> Mon-Sat: 9am - 8pm</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-cream font-semibold tracking-tight mb-6">Newsletter</h4>
+                    <div class="flex flex-col space-y-3">
+                        <input type="email" placeholder="Enter your email" class="bg-charcoal border border-slate rounded-lg px-4 py-3 text-sm text-cream focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all">
+                        <button class="bg-gold hover:bg-gold-hover text-obsidian px-4 py-3 rounded-lg text-sm font-medium uppercase tracking-wider transition-colors">Subscribe</button>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-slate pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-silver">
+                <p>© 2024 BarberBook. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="hover:text-cream">Privacy Policy</a>
+                    <a href="#" class="hover:text-cream">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT ROUTER & COMPONENT LOGIC -->
+    <script>
+        // --- DATA STORE ---
+        const services = [
+            { id: 1, name: "Classic Haircut", price: 35, duration: 30, icon: "lucide:scissors", desc: "Traditional cut tailored to your style", category: "HAIRCUT" },
+            { id: 2, name: "Signature Fade", price: 45, duration: 45, icon: "lucide:layers", desc: "Precision fade with seamless blending", category: "HAIRCUT" },
+            { id: 3, name: "Beard Sculpting", price: 25, duration: 20, icon: "lucide:user", desc: "Expert shaping and conditioning", category: "BEARD" },
+            { id: 4, name: "Hot Towel Shave", price: 40, duration: 30, icon: "lucide:wind", desc: "Luxurious traditional straight razor shave", category: "SHAVE" },
+            { id: 5, name: "The Executive", price: 65, duration: 60, icon: "lucide:crown", desc: "Haircut + beard + hot towel treatment", category: "PACKAGE" },
+            { id: 6, name: "Junior Cut", price: 25, duration: 20, icon: "lucide:smile", desc: "Expert cuts for young gentlemen (under 12)", category: "HAIRCUT" }
+        ];
+
+        const barbers = [
+            { id: 1, name: "Marcus Williams", role: "Senior Barber", rating: 4.9, reviews: 127, exp: "12 years", img: "https://images.unsplash.com/photo-1567894340315-735d7c361db0?w=600", specialties: ["Fades", "Designs", "Classic"] },
+            { id: 2, name: "James Chen", role: "Master Barber", rating: 4.8, reviews: 94, exp: "8 years", img: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=600", specialties: ["Beards", "Hot Shaves"] },
+            { id: 3, name: "David Thompson", role: "Style Specialist", rating: 4.9, reviews: 78, exp: "6 years", img: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=600", specialties: ["Modern", "Textures"] }
+        ];
+
+        // --- ROUTER ---
+        const router = {
+            currentPage: 'home',
+            
+            routes: {
+                // PAGE 1: LANDING
+                'home': () => `
+                    <div class="relative h-screen -mt-20">
+                        <div class="absolute inset-0 bg-black/60 z-10"></div>
+                        <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920" class="absolute inset-0 w-full h-full object-cover" alt="Barber Shop">
+                        <div class="relative z-20 h-full flex flex-col justify-center items-center text-center px-4">
+                            <p class="text-gold tracking-[0.2em] text-sm font-semibold mb-4">ESTABLISHED 2024</p>
+                            <h1 class="font-serif text-5xl md:text-6xl font-semibold text-cream mb-6 tracking-tight">The Art of the Perfect Cut</h1>
+                            <p class="text-xl text-gray-300 max-w-2xl mb-10 font-light">Premium grooming experience for the modern gentleman</p>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <button onclick="router.navigate('booking')" class="bg-gold hover:bg-gold-hover text-obsidian px-8 py-4 rounded-lg text-sm font-semibold uppercase tracking-wider transition-transform hover:scale-105">Book Appointment</button>
+                                <button onclick="router.navigate('services')" class="bg-transparent border border-gold text-gold hover:bg-gold/10 px-8 py-4 rounded-lg text-sm font-semibold uppercase tracking-wider transition-transform hover:scale-105">Explore Services</button>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
+                            <span class="iconify text-gold w-6 h-6" data-icon="lucide:chevron-down"></span>
+                        </div>
+                    </div>
+
+                    <!-- Services Preview -->
+                    <section class="py-24 bg-obsidian px-4 md:px-8 max-w-7xl mx-auto">
+                        <div class="text-center mb-16">
+                            <p class="text-gold text-xs font-bold tracking-[0.2em] uppercase mb-3">What We Offer</p>
+                            <h2 class="font-serif text-4xl text-cream font-medium tracking-tight">Premium Services</h2>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            ${services.map(s => `
+                                <div class="bg-charcoal border border-slate rounded-2xl p-8 hover:border-gold hover:scale-[1.02] transition-all group relative overflow-hidden">
+                                    <div class="flex justify-between items-start mb-6">
+                                        <div class="p-3 rounded-lg bg-slate text-gold group-hover:bg-gold group-hover:text-obsidian transition-colors">
+                                            <span class="iconify w-6 h-6" data-icon="${s.icon}"></span>
+                                        </div>
+                                        <span class="text-gold font-serif text-xl font-semibold">$${s.price}</span>
+                                    </div>
+                                    <h3 class="text-cream text-xl font-semibold mb-2">${s.name}</h3>
+                                    <p class="text-silver text-sm mb-4">${s.desc}</p>
+                                    <div class="flex items-center text-xs text-silver mb-6">
+                                        <span class="iconify w-4 h-4 mr-2" data-icon="lucide:clock"></span> ${s.duration} min
+                                    </div>
+                                    <button onclick="router.navigate('booking')" class="w-full py-3 border border-slate rounded-lg text-sm text-silver group-hover:bg-gold group-hover:border-gold group-hover:text-obsidian transition-all uppercase font-medium">Book Now</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+
+                    <!-- Barbers Section -->
+                    <section class="py-24 bg-charcoal">
+                        <div class="max-w-7xl mx-auto px-4 md:px-8">
+                            <div class="text-center mb-16">
+                                <p class="text-gold text-xs font-bold tracking-[0.2em] uppercase mb-3">The Team</p>
+                                <h2 class="font-serif text-4xl text-cream font-medium tracking-tight">Master Barbers</h2>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                ${barbers.map(b => `
+                                    <div class="bg-obsidian border border-slate rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
+                                        <div class="h-64 overflow-hidden">
+                                            <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" class="w-full h-full object-cover hover:scale-110 transition-transform duration-700" alt="${b.name}">
+                                        </div>
+                                        <div class="p-6">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <h3 class="text-cream text-xl font-semibold">${b.name}</h3>
+                                                <span class="flex items-center text-gold text-sm font-semibold"><span class="iconify w-4 h-4 mr-1" data-icon="lucide:star"></span>${b.rating}</span>
+                                            </div>
+                                            <p class="text-gold text-xs font-medium uppercase tracking-wider mb-4">${b.role}</p>
+                                            <p class="text-silver text-sm mb-4">${b.specialties.join(', ')} • ${b.exp}</p>
+                                            <button onclick="router.navigate('barber-profile')" class="w-full bg-slate hover:bg-gold hover:text-obsidian text-cream py-3 rounded-lg text-sm font-medium uppercase transition-colors">Book with ${b.name.split(' ')[0]}</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- How It Works -->
+                    <section class="py-20 bg-obsidian border-t border-slate">
+                        <div class="max-w-7xl mx-auto px-4">
+                            <h2 class="text-center font-serif text-3xl text-cream font-medium mb-16">Book in 60 Seconds</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+                                <div class="hidden md:block absolute top-8 left-0 w-full h-0.5 bg-slate -z-0"></div>
+                                ${[
+                                    {icon:'list', t:'Choose Service', d:'Select from our premium offerings'},
+                                    {icon:'user', t:'Pick Barber', d:'Choose your preferred stylist'},
+                                    {icon:'calendar', t:'Select Time', d:'Find your perfect slot'},
+                                    {icon:'check', t:'Confirm', d:'You\'re all set'}
+                                ].map((step, i) => `
+                                    <div class="relative z-10 flex flex-col items-center text-center bg-obsidian p-4">
+                                        <div class="w-16 h-16 rounded-full bg-charcoal border border-gold flex items-center justify-center text-gold mb-6 shadow-[0_0_15px_rgba(201,162,39,0.2)]">
+                                            <span class="iconify w-8 h-8" data-icon="lucide:${step.icon}"></span>
+                                        </div>
+                                        <h4 class="text-cream font-semibold mb-2">${step.t}</h4>
+                                        <p class="text-silver text-sm">${step.d}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </section>
+                `,
+
+                // PAGE 2: SERVICES
+                'services': () => `
+                    <div class="relative py-24 bg-charcoal">
+                        <div class="absolute inset-0 bg-black/50 z-0">
+                            <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1200" class="w-full h-full object-cover opacity-20">
+                        </div>
+                        <div class="relative z-10 max-w-7xl mx-auto px-4 text-center">
+                            <p class="text-silver text-sm mb-4">Home > Services</p>
+                            <h1 class="font-serif text-5xl text-cream font-semibold mb-4">Our Services</h1>
+                            <p class="text-silver max-w-xl mx-auto">Crafted experiences for the distinguished gentleman</p>
+                        </div>
+                    </div>
+                    
+                    <div class="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-4 gap-12">
+                        <!-- Sidebar -->
+                        <div class="hidden lg:block lg:col-span-1 space-y-8">
+                            <div class="bg-charcoal border border-slate p-6 rounded-2xl">
+                                <h3 class="text-cream font-semibold mb-4">Need Guidance?</h3>
+                                <p class="text-silver text-sm mb-6">Not sure what you need? Call us for a free consultation.</p>
+                                <button class="w-full border border-gold text-gold py-2 rounded-lg text-sm uppercase hover:bg-gold hover:text-obsidian transition-colors">Call Us</button>
+                            </div>
+                            <div class="bg-charcoal border border-slate p-6 rounded-2xl">
+                                <h3 class="text-cream font-semibold mb-4">Hours</h3>
+                                <ul class="text-sm text-silver space-y-2">
+                                    <li class="flex justify-between"><span>Mon-Fri</span> <span>9am - 7pm</span></li>
+                                    <li class="flex justify-between"><span>Saturday</span> <span>9am - 5pm</span></li>
+                                    <li class="flex justify-between"><span>Sunday</span> <span>Closed</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Services Grid -->
+                        <div class="lg:col-span-3">
+                            <div class="flex space-x-6 border-b border-slate mb-8 overflow-x-auto no-scrollbar">
+                                <button class="pb-3 border-b-2 border-gold text-gold font-medium whitespace-nowrap">All Services</button>
+                                <button class="pb-3 border-b-2 border-transparent text-silver hover:text-cream whitespace-nowrap">Haircuts</button>
+                                <button class="pb-3 border-b-2 border-transparent text-silver hover:text-cream whitespace-nowrap">Beard</button>
+                                <button class="pb-3 border-b-2 border-transparent text-silver hover:text-cream whitespace-nowrap">Packages</button>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                ${services.map(s => `
+                                    <div class="bg-charcoal border border-slate rounded-2xl p-6 flex flex-col hover:border-gold transition-colors">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <span class="bg-gold/10 text-gold text-xs px-2 py-1 rounded-full font-medium tracking-wider">${s.category}</span>
+                                            <span class="text-2xl text-gold font-serif font-semibold">$${s.price}</span>
+                                        </div>
+                                        <h3 class="text-cream text-xl font-semibold mb-2">${s.name}</h3>
+                                        <p class="text-silver text-sm mb-6 flex-grow">${s.desc}. Detailed attention to hair texture and face shape.</p>
+                                        <div class="flex items-center text-sm text-silver mb-6">
+                                            <span class="iconify w-4 h-4 mr-2" data-icon="lucide:clock"></span> ${s.duration} minutes
+                                        </div>
+                                        <button onclick="router.navigate('booking')" class="w-full bg-gold hover:bg-gold-hover text-obsidian py-3 rounded-lg text-sm font-semibold uppercase tracking-wider">Book This Service</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `,
+
+                // PAGE 3: BARBERS LIST
+                'barbers': () => `
+                    <div class="bg-charcoal py-16 border-b border-slate">
+                        <div class="max-w-7xl mx-auto px-4 text-center">
+                            <h1 class="font-serif text-4xl text-cream font-semibold mb-4">Our Barbers</h1>
+                            <p class="text-silver">Skilled craftsmen dedicated to their art</p>
+                        </div>
+                    </div>
+                    <div class="max-w-7xl mx-auto px-4 py-8">
+                        <div class="flex justify-between items-center mb-8 bg-charcoal p-4 rounded-xl border border-slate">
+                            <select class="bg-obsidian border border-slate text-silver text-sm rounded-lg p-2.5 focus:border-gold outline-none">
+                                <option>Sort by Rating</option>
+                                <option>Sort by Experience</option>
+                            </select>
+                            <select class="bg-obsidian border border-slate text-silver text-sm rounded-lg p-2.5 focus:border-gold outline-none hidden md:block">
+                                <option>All Specialties</option>
+                                <option>Fades</option>
+                                <option>Beards</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                             ${barbers.map(b => `
+                                <div class="bg-charcoal border border-slate rounded-2xl overflow-hidden group">
+                                    <div class="h-80 overflow-hidden relative">
+                                        <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        <div class="absolute bottom-4 right-4 bg-black/80 px-3 py-1 rounded-full flex items-center text-gold text-sm font-semibold backdrop-blur-sm">
+                                            <span class="iconify w-4 h-4 mr-1" data-icon="lucide:star"></span> ${b.rating}
+                                        </div>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <h3 class="text-cream text-xl font-semibold">${b.name}</h3>
+                                            <div class="w-2 h-2 bg-success rounded-full" title="Available Today"></div>
+                                        </div>
+                                        <p class="text-silver text-sm mb-4">${b.role}</p>
+                                        <div class="flex flex-wrap gap-2 mb-6">
+                                            ${b.specialties.map(sp => `<span class="bg-slate text-gold text-xs px-2 py-1 rounded-full">${sp}</span>`).join('')}
+                                        </div>
+                                        <p class="text-success text-xs font-medium mb-6 flex items-center">
+                                            <span class="iconify mr-1" data-icon="lucide:clock"></span> Next available: Today, 3:30 PM
+                                        </p>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <button onclick="router.navigate('barber-profile')" class="border border-slate text-cream hover:border-gold hover:text-gold py-2 rounded-lg text-sm font-medium transition-colors">Profile</button>
+                                            <button onclick="router.navigate('booking')" class="bg-gold hover:bg-gold-hover text-obsidian py-2 rounded-lg text-sm font-medium transition-colors">Book Now</button>
+                                        </div>
+                                    </div>
+                                </div>
+                             `).join('')}
+                        </div>
+                    </div>
+                `,
+
+                // PAGE 4: BARBER PROFILE
+                'barber-profile': () => `
+                    <div class="max-w-7xl mx-auto px-4 py-12">
+                        <!-- Hero -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
+                            <div class="lg:col-span-5 h-[500px] rounded-2xl overflow-hidden">
+                                <img src="https://images.unsplash.com/photo-1567894340315-735d7c361db0?w=600" class="w-full h-full object-cover">
+                            </div>
+                            <div class="lg:col-span-7 flex flex-col justify-center">
+                                <span class="bg-gold/10 text-gold text-sm font-semibold px-3 py-1 rounded-full w-fit mb-4">Senior Barber</span>
+                                <h1 class="font-serif text-5xl text-cream font-semibold mb-4">Marcus Williams</h1>
+                                <div class="flex items-center text-silver mb-8 space-x-6">
+                                    <span class="flex items-center"><span class="iconify text-gold mr-1" data-icon="lucide:star"></span> 4.9 (127 reviews)</span>
+                                    <span>12 years experience</span>
+                                </div>
+                                <div class="mb-8">
+                                    <h3 class="text-cream font-semibold mb-2">Specialties</h3>
+                                    <div class="flex gap-2">
+                                        <span class="px-3 py-1 bg-charcoal border border-slate rounded-full text-sm text-silver">Precision Fades</span>
+                                        <span class="px-3 py-1 bg-charcoal border border-slate rounded-full text-sm text-silver">Hair Designs</span>
+                                        <span class="px-3 py-1 bg-charcoal border border-slate rounded-full text-sm text-silver">Classic Cuts</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col sm:flex-row gap-4">
+                                    <button onclick="router.navigate('booking')" class="bg-gold hover:bg-gold-hover text-obsidian px-8 py-4 rounded-lg text-sm font-semibold uppercase tracking-wider">Book with Marcus</button>
+                                    <div class="flex items-center text-success text-sm font-medium px-4">
+                                        <span class="w-2 h-2 bg-success rounded-full mr-2"></span> Next available: Today 4:00 PM
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Content Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                            <div class="lg:col-span-2 space-y-12">
+                                <!-- About -->
+                                <section>
+                                    <h2 class="font-serif text-2xl text-cream mb-4">About Marcus</h2>
+                                    <p class="text-silver leading-relaxed mb-6">With over a decade of experience in premium grooming, Marcus brings an artistic eye to every cut. He believes that a haircut isn't just maintenance—it's the foundation of a man's confidence. Originally trained in London, he specializes in blending classic techniques with modern aesthetics.</p>
+                                    <blockquote class="border-l-2 border-gold pl-4 text-gold italic">"Precision is not just an act, it is a habit. Every client deserves my absolute best work."</blockquote>
+                                </section>
+
+                                <!-- Services List -->
+                                <section>
+                                    <h2 class="font-serif text-2xl text-cream mb-6">Services Offered</h2>
+                                    <div class="space-y-4">
+                                        ${services.slice(0,4).map(s => `
+                                            <div class="flex justify-between items-center p-4 bg-charcoal border border-slate rounded-xl">
+                                                <div>
+                                                    <h4 class="text-cream font-medium">${s.name}</h4>
+                                                    <span class="text-xs text-silver">${s.duration} min</span>
+                                                </div>
+                                                <div class="flex items-center gap-4">
+                                                    <span class="text-gold font-semibold">$${s.price}</span>
+                                                    <button onclick="router.navigate('booking')" class="text-xs border border-slate hover:border-gold text-cream hover:text-gold px-3 py-1.5 rounded uppercase">Book</button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </section>
+                                
+                                <!-- Reviews -->
+                                <section>
+                                    <h2 class="font-serif text-2xl text-cream mb-6">Client Reviews</h2>
+                                    <div class="flex items-center gap-4 mb-8 bg-charcoal p-6 rounded-xl">
+                                        <div class="text-5xl font-serif text-gold">4.9</div>
+                                        <div class="flex-1">
+                                            <div class="flex text-gold text-sm mb-1"><span class="iconify" data-icon="lucide:star" data-fill="currentColor"></span><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span></div>
+                                            <p class="text-xs text-silver">Based on 127 reviews</p>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-6">
+                                        <div class="border-b border-slate pb-6">
+                                            <div class="flex justify-between mb-2">
+                                                <h5 class="text-cream font-medium">Robert M.</h5>
+                                                <span class="text-xs text-silver">2 days ago</span>
+                                            </div>
+                                            <div class="flex text-gold text-xs mb-2"><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span><span class="iconify" data-icon="lucide:star"></span></div>
+                                            <p class="text-silver text-sm">Best barbershop in the city. Marcus always delivers perfection. The fade is seamless.</p>
+                                        </div>
+                                    </div>
+                                    <button class="mt-6 text-gold text-sm font-medium hover:underline">Load More Reviews</button>
+                                </section>
+                            </div>
+                            
+                            <!-- Sidebar Schedule -->
+                            <div class="lg:col-span-1">
+                                <div class="bg-charcoal border border-slate p-6 rounded-2xl sticky top-24">
+                                    <h3 class="font-serif text-xl text-cream mb-6">Working Hours</h3>
+                                    <table class="w-full text-sm">
+                                        <tbody class="text-silver">
+                                            <tr class="border-b border-slate/50"><td class="py-3">Monday</td><td class="py-3 text-right">9:00 - 19:00</td></tr>
+                                            <tr class="border-b border-slate/50"><td class="py-3">Tuesday</td><td class="py-3 text-right">9:00 - 19:00</td></tr>
+                                            <tr class="border-b border-slate/50"><td class="py-3 text-cream font-medium">Wednesday</td><td class="py-3 text-right text-cream font-medium">9:00 - 19:00</td></tr>
+                                            <tr class="border-b border-slate/50"><td class="py-3">Thursday</td><td class="py-3 text-right">9:00 - 19:00</td></tr>
+                                            <tr class="border-b border-slate/50"><td class="py-3">Friday</td><td class="py-3 text-right">9:00 - 19:00</td></tr>
+                                            <tr class="border-b border-slate/50"><td class="py-3">Saturday</td><td class="py-3 text-right">9:00 - 17:00</td></tr>
+                                            <tr><td class="py-3 text-slate-500">Sunday</td><td class="py-3 text-right text-slate-500">Closed</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+
+                // PAGE 5: BOOKING WIZARD
+                'booking': () => this.renderBookingWizard(),
+
+                // PAGE 6: SUCCESS
+                'booking-success': () => `
+                    <div class="min-h-[80vh] flex items-center justify-center p-4">
+                        <div class="max-w-md w-full text-center">
+                            <div class="w-24 h-24 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-8">
+                                <span class="iconify w-12 h-12 text-success" data-icon="lucide:check"></span>
+                            </div>
+                            <h1 class="font-serif text-3xl text-cream font-semibold mb-2">Booking Confirmed!</h1>
+                            <p class="text-silver mb-8">We look forward to seeing you</p>
+                            
+                            <div class="bg-charcoal border border-slate rounded-2xl p-6 mb-8 text-left relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full -mr-12 -mt-12"></div>
+                                <div class="flex justify-between items-center mb-6 pb-6 border-b border-slate">
+                                    <div>
+                                        <p class="text-xs text-silver uppercase tracking-wider mb-1">Confirmation</p>
+                                        <p class="text-gold font-mono">#BB-2024-0142</p>
+                                    </div>
+                                    <div class="w-12 h-12 bg-white rounded-lg opacity-80"></div> <!-- QR Placeholder -->
+                                </div>
+                                <div class="space-y-4 text-sm">
+                                    <div class="flex justify-between"><span class="text-silver">Service</span> <span class="text-cream font-medium">Classic Haircut</span></div>
+                                    <div class="flex justify-between"><span class="text-silver">Barber</span> <span class="text-cream font-medium">Marcus Williams</span></div>
+                                    <div class="flex justify-between"><span class="text-silver">Date</span> <span class="text-cream font-medium">Fri, Jan 15, 2025</span></div>
+                                    <div class="flex justify-between"><span class="text-silver">Time</span> <span class="text-cream font-medium">3:30 PM</span></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col gap-3">
+                                <button onclick="router.navigate('customer-bookings')" class="w-full bg-slate hover:bg-gold hover:text-obsidian text-cream py-3 rounded-lg text-sm font-medium transition-colors">View My Bookings</button>
+                                <button onclick="router.navigate('home')" class="text-silver hover:text-white text-sm">Return Home</button>
+                            </div>
+                        </div>
+                    </div>
+                `,
+
+                // PAGE 7/8: AUTH
+                'login': () => this.renderAuth('login'),
+                'register': () => this.renderAuth('register'),
+
+                // DASHBOARDS
+                'customer-bookings': () => this.renderDashboard('customer', 'bookings'),
+                'customer-profile': () => this.renderDashboard('customer', 'profile'),
+                'barber-today': () => this.renderDashboard('barber', 'today'),
+                'barber-appointments': () => this.renderDashboard('barber', 'appointments'),
+                'barber-schedule': () => this.renderDashboard('barber', 'schedule'),
+                'admin-dashboard': () => this.renderDashboard('admin', 'overview'),
+                'admin-services': () => this.renderDashboard('admin', 'services'),
+                'admin-barbers': () => this.renderDashboard('admin', 'barbers'),
+                'admin-settings': () => this.renderDashboard('admin', 'settings'),
+            },
+
+            // --- RENDER HELPERS ---
+            
+            renderBookingWizard: function() {
+                // Simplified state for demo (Steps logic handled via simple variable in real app, here hardcoded view of step 3 for visual demo, but with UI for all steps)
+                // To keep it single file, I'll show the Step 3 (Time) state as the default "interactive" look or provide buttons to swap content.
+                // Let's create a functional wizard structure.
+                let step = 1;
+                const setStep = (s) => {
+                    document.querySelectorAll('.booking-step').forEach(el => el.classList.add('hidden'));
+                    document.getElementById(`step-${s}`).classList.remove('hidden');
+                    // Update progress bar
+                    for(let i=1; i<=4; i++) {
+                         const el = document.getElementById(`prog-${i}`);
+                         if(i < s) { el.classList.add('text-gold', 'border-gold'); el.classList.remove('text-silver', 'border-slate'); }
+                         else if(i === s) { el.classList.add('text-cream', 'border-gold'); el.classList.remove('text-silver', 'border-slate'); }
+                         else { el.classList.add('text-silver', 'border-slate'); el.classList.remove('text-gold', 'border-gold', 'text-cream'); }
+                    }
+                };
+
+                setTimeout(() => setStep(1), 0); // Init
+
+                return `
+                    <div class="max-w-4xl mx-auto px-4 py-12">
+                        <!-- Progress -->
+                        <div class="flex justify-between mb-12 relative">
+                            <div class="absolute top-1/2 left-0 w-full h-px bg-slate -z-10"></div>
+                            ${['Service', 'Barber', 'Time', 'Confirm'].map((l, i) => `
+                                <div id="prog-${i+1}" class="bg-obsidian px-4 py-2 border rounded-full text-sm font-medium transition-colors duration-300 ${i===0?'text-cream border-gold':'text-silver border-slate'}">
+                                    <span class="mr-2">${i+1}</span>${l}
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Step 1: Services -->
+                        <div id="step-1" class="booking-step">
+                            <h2 class="font-serif text-3xl text-cream mb-8">Choose Your Service</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                ${services.slice(0,4).map((s, idx) => `
+                                    <div class="bg-charcoal border ${idx===0 ? 'border-gold' : 'border-slate'} p-6 rounded-xl cursor-pointer hover:border-gold transition-all relative" onclick="document.getElementById('step-btn-1').disabled=false">
+                                        ${idx===0 ? '<div class="absolute top-4 right-4 text-gold"><span class="iconify" data-icon="lucide:check-circle"></span></div>' : ''}
+                                        <h3 class="text-cream font-medium text-lg">${s.name}</h3>
+                                        <p class="text-silver text-sm mb-4">${s.desc}</p>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gold font-semibold">$${s.price}</span>
+                                            <span class="text-xs text-silver flex items-center"><span class="iconify mr-1" data-icon="lucide:clock"></span>${s.duration}m</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="flex justify-end border-t border-slate pt-6">
+                                <button id="step-btn-1" onclick="document.getElementById('step-1').classList.add('hidden'); document.getElementById('step-2').classList.remove('hidden');" class="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Continue</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Barber -->
+                        <div id="step-2" class="booking-step hidden">
+                            <h2 class="font-serif text-3xl text-cream mb-8">Choose Your Barber</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-charcoal border border-slate hover:border-gold p-6 rounded-xl cursor-pointer flex flex-col items-center justify-center text-center h-full">
+                                    <div class="w-16 h-16 bg-slate rounded-full flex items-center justify-center mb-4 text-gold"><span class="iconify w-8 h-8" data-icon="lucide:clock"></span></div>
+                                    <h3 class="text-cream font-medium">Any Available</h3>
+                                    <p class="text-xs text-silver mt-1">For the soonest slot</p>
+                                </div>
+                                ${barbers.slice(0,2).map(b => `
+                                    <div class="bg-charcoal border border-slate hover:border-gold p-6 rounded-xl cursor-pointer text-center group">
+                                        <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/917d6f93-fb36-439a-8c48-884b67b35381_1600w.jpg" class="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-transparent group-hover:border-gold">
+                                        <h3 class="text-cream font-medium">${b.name}</h3>
+                                        <div class="flex justify-center text-gold text-xs my-2"><span class="iconify" data-icon="lucide:star"></span> ${b.rating}</div>
+                                        <p class="text-success text-xs">Next: Today 3:30 PM</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="flex justify-between border-t border-slate pt-6">
+                                <button onclick="document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-1').classList.remove('hidden');" class="text-silver hover:text-cream px-6 py-3 uppercase text-sm font-medium">Back</button>
+                                <button onclick="document.getElementById('step-2').classList.add('hidden'); document.getElementById('step-3').classList.remove('hidden');" class="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Continue</button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Time -->
+                        <div id="step-3" class="booking-step hidden">
+                            <h2 class="font-serif text-3xl text-cream mb-8">Select Date & Time</h2>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                <!-- Calendar Mockup -->
+                                <div class="bg-charcoal border border-slate rounded-xl p-6">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <span class="text-cream font-medium">January 2025</span>
+                                        <div class="flex gap-2">
+                                            <button class="p-1 hover:text-gold"><span class="iconify" data-icon="lucide:chevron-left"></span></button>
+                                            <button class="p-1 hover:text-gold"><span class="iconify" data-icon="lucide:chevron-right"></span></button>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-7 gap-2 text-center text-sm mb-2 text-silver">
+                                        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                                    </div>
+                                    <div class="grid grid-cols-7 gap-2 text-center text-sm">
+                                        ${Array(31).fill(0).map((_, i) => {
+                                            const d = i+1;
+                                            let classes = "p-2 rounded hover:bg-slate cursor-pointer text-cream";
+                                            if(d === 15) classes = "p-2 rounded bg-gold text-obsidian font-bold shadow-lg shadow-gold/20";
+                                            if(d < 14) classes = "p-2 text-slate-600 cursor-not-allowed";
+                                            return `<div class="${classes}">${d}</div>`
+                                        }).join('')}
+                                    </div>
+                                </div>
+                                <!-- Slots -->
+                                <div>
+                                    <h3 class="text-silver text-sm uppercase tracking-wider mb-4">Available Times • Jan 15</h3>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        ${['9:00 AM', '9:30 AM', '10:00 AM', '11:30 AM', '1:00 PM', '2:30 PM', '3:30 PM', '4:00 PM', '5:30 PM'].map((t, i) => `
+                                            <button class="py-2 rounded border ${t==='3:30 PM' ? 'bg-gold border-gold text-obsidian' : 'bg-charcoal border-slate text-cream hover:border-gold'} text-sm transition-all">${t}</button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between border-t border-slate pt-6">
+                                <button onclick="document.getElementById('step-3').classList.add('hidden'); document.getElementById('step-2').classList.remove('hidden');" class="text-silver hover:text-cream px-6 py-3 uppercase text-sm font-medium">Back</button>
+                                <button onclick="document.getElementById('step-3').classList.add('hidden'); document.getElementById('step-4').classList.remove('hidden');" class="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider">Continue</button>
+                            </div>
+                        </div>
+
+                         <!-- Step 4: Confirm -->
+                        <div id="step-4" class="booking-step hidden">
+                            <h2 class="font-serif text-3xl text-cream mb-8">Confirm Booking</h2>
+                            <div class="bg-charcoal border border-slate rounded-2xl p-8 mb-8">
+                                <div class="flex items-start gap-6 mb-6">
+                                    <img src="https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/5bab247f-35d9-400d-a82b-fd87cfe913d2_1600w.webp" class="w-16 h-16 rounded-lg object-cover">
+                                    <div>
+                                        <h3 class="text-cream text-lg font-medium">Classic Haircut</h3>
+                                        <p class="text-gold">with Marcus Williams</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-y-4 text-sm border-t border-b border-slate py-6 mb-6">
+                                    <div class="text-silver">Date</div><div class="text-right text-cream">Jan 15, 2025</div>
+                                    <div class="text-silver">Time</div><div class="text-right text-cream">3:30 PM</div>
+                                    <div class="text-silver">Duration</div><div class="text-right text-cream">30 min</div>
+                                </div>
+                                <div class="flex justify-between items-center mb-6">
+                                    <span class="text-lg text-cream">Total</span>
+                                    <span class="text-2xl text-gold font-serif font-bold">$35.00</span>
+                                </div>
+                                <textarea class="w-full bg-obsidian border border-slate rounded-lg p-4 text-sm text-cream mb-4 focus:border-gold outline-none" placeholder="Any special requests?"></textarea>
+                                <label class="flex items-center text-sm text-silver cursor-pointer">
+                                    <input type="checkbox" class="mr-3 rounded border-slate bg-obsidian text-gold focus:ring-gold">
+                                    I agree to the cancellation policy (2 hour notice)
+                                </label>
+                            </div>
+                            <div class="flex justify-between">
+                                <button onclick="document.getElementById('step-4').classList.add('hidden'); document.getElementById('step-3').classList.remove('hidden');" class="text-silver hover:text-cream px-6 py-3 uppercase text-sm font-medium">Back</button>
+                                <button onclick="router.navigate('booking-success')" class="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider w-full sm:w-auto">Confirm Booking</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderAuth: function(type) {
+                const isLogin = type === 'login';
+                return `
+                    <div class="min-h-screen flex -mt-20">
+                        <!-- Left Panel -->
+                        <div class="hidden lg:flex w-[40%] bg-black relative items-center justify-center overflow-hidden">
+                            <div class="absolute inset-0 bg-black/60 z-10"></div>
+                            <img src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1200" class="absolute inset-0 w-full h-full object-cover">
+                            <div class="relative z-20 text-center">
+                                <h1 class="font-serif text-4xl text-gold mb-2">BARBERBOOK</h1>
+                                <p class="text-cream font-light tracking-wide">Where Style Meets Precision</p>
+                            </div>
+                        </div>
+                        <!-- Right Panel -->
+                        <div class="w-full lg:w-[60%] bg-obsidian flex items-center justify-center p-8">
+                            <div class="max-w-md w-full">
+                                <h2 class="font-serif text-3xl text-cream mb-2">${isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+                                <p class="text-silver mb-8">${isLogin ? 'Sign in to manage your appointments' : 'Join us for a premium grooming experience'}</p>
+                                
+                                <form onsubmit="event.preventDefault(); router.navigate(isLogin ? 'customer-bookings' : 'login');" class="space-y-4">
+                                    ${!isLogin ? `
+                                        <div>
+                                            <label class="block text-xs text-silver uppercase tracking-wider mb-1">Full Name</label>
+                                            <input type="text" class="w-full bg-charcoal border border-slate rounded-lg p-3 text-cream focus:border-gold outline-none transition-colors">
+                                        </div>
+                                    ` : ''}
+                                    <div>
+                                        <label class="block text-xs text-silver uppercase tracking-wider mb-1">Email Address</label>
+                                        <div class="relative">
+                                            <input type="email" class="w-full bg-charcoal border border-slate rounded-lg p-3 pl-10 text-cream focus:border-gold outline-none transition-colors">
+                                            <span class="iconify absolute left-3 top-3.5 text-silver" data-icon="lucide:mail"></span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-silver uppercase tracking-wider mb-1">Password</label>
+                                        <div class="relative">
+                                            <input type="password" class="w-full bg-charcoal border border-slate rounded-lg p-3 pl-10 text-cream focus:border-gold outline-none transition-colors">
+                                            <span class="iconify absolute left-3 top-3.5 text-silver" data-icon="lucide:lock"></span>
+                                        </div>
+                                    </div>
+                                    
+                                    ${isLogin ? `
+                                        <div class="flex justify-between items-center text-sm">
+                                            <label class="flex items-center text-silver cursor-pointer">
+                                                <input type="checkbox" class="mr-2 rounded border-slate bg-charcoal text-gold focus:ring-0"> Remember me
+                                            </label>
+                                            <a href="#" class="text-gold hover:underline">Forgot password?</a>
+                                        </div>
+                                    ` : `
+                                        <label class="flex items-center text-sm text-silver cursor-pointer">
+                                            <input type="checkbox" class="mr-2 rounded border-slate bg-charcoal text-gold focus:ring-0"> I agree to Terms & Privacy
+                                        </label>
+                                    `}
+                                    
+                                    <button class="w-full bg-gold hover:bg-gold-hover text-obsidian py-3 rounded-lg font-semibold uppercase tracking-wider transition-transform active:scale-95">${isLogin ? 'Sign In' : 'Create Account'}</button>
+                                </form>
+
+                                <div class="relative my-8 text-center">
+                                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate"></div></div>
+                                    <span class="relative bg-obsidian px-2 text-silver text-sm">or</span>
+                                </div>
+
+                                <button class="w-full bg-white text-gray-900 py-3 rounded-lg font-medium flex items-center justify-center hover:bg-gray-100 transition-colors">
+                                    <span class="iconify mr-2" data-icon="logos:google-icon"></span> Continue with Google
+                                </button>
+
+                                <p class="text-center text-silver text-sm mt-8">
+                                    ${isLogin ? "Don't have an account?" : "Already have an account?"} 
+                                    <a onclick="router.navigate('${isLogin ? 'register' : 'login'}')" class="text-gold hover:underline cursor-pointer">${isLogin ? 'Sign up' : 'Sign in'}</a>
+                                </p>
+                                <!-- Secret links for demo -->
+                                <div class="mt-8 text-center text-xs text-slate-700">
+                                    <span class="cursor-pointer hover:text-silver" onclick="router.navigate('barber-today')">[Barber View]</span>
+                                    <span class="cursor-pointer hover:text-silver ml-2" onclick="router.navigate('admin-dashboard')">[Admin View]</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderDashboard: function(role, view) {
+                // Sidebar Logic
+                const sidebarLinks = {
+                    customer: [
+                        { id: 'bookings', label: 'My Bookings', icon: 'calendar' },
+                        { id: 'profile', label: 'Profile', icon: 'user' },
+                        { id: 'favorites', label: 'Favorites', icon: 'heart' }
+                    ],
+                    barber: [
+                        { id: 'today', label: 'Today', icon: 'clock' },
+                        { id: 'appointments', label: 'All Appointments', icon: 'calendar' },
+                        { id: 'schedule', label: 'My Schedule', icon: 'settings' }
+                    ],
+                    admin: [
+                        { id: 'overview', label: 'Dashboard', icon: 'bar-chart-2' },
+                        { id: 'services', label: 'Services', icon: 'scissors' },
+                        { id: 'barbers', label: 'Barbers', icon: 'users' },
+                        { id: 'settings', label: 'Settings', icon: 'sliders' }
+                    ]
+                };
+
+                const links = sidebarLinks[role];
+                const prefix = role === 'admin' ? 'admin-' : role === 'customer' ? 'customer-' : 'barber-';
+
+                // Content Views
+                let content = '';
+                
+                // CUSTOMER CONTENT
+                if(role === 'customer' && view === 'bookings') {
+                    content = `
+                        <h2 class="font-serif text-3xl text-cream mb-8">My Bookings</h2>
+                        <div class="flex space-x-6 border-b border-slate mb-8">
+                            <button class="pb-3 border-b-2 border-gold text-gold font-medium">Upcoming</button>
+                            <button class="pb-3 border-b-2 border-transparent text-silver hover:text-cream">Past</button>
+                            <button class="pb-3 border-b-2 border-transparent text-silver hover:text-cream">Cancelled</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-charcoal border border-slate rounded-xl p-6 flex flex-col md:flex-row items-center gap-6">
+                                <div class="bg-obsidian border border-slate rounded-lg p-4 text-center min-w-[100px]">
+                                    <div class="text-3xl text-gold font-serif font-bold">15</div>
+                                    <div class="text-xs text-silver uppercase">Jan</div>
+                                </div>
+                                <div class="flex-grow">
+                                    <h3 class="text-cream text-lg font-medium">Classic Haircut</h3>
+                                    <p class="text-silver text-sm mb-2">with Marcus Williams</p>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-cream text-sm"><span class="iconify inline mr-1" data-icon="lucide:clock"></span> 3:30 PM</span>
+                                        <span class="bg-success/10 text-success text-xs px-2 py-1 rounded-full">Confirmed</span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2 w-full md:w-auto">
+                                    <div class="text-gold text-xs font-medium text-center mb-1">In 2 days</div>
+                                    <button class="border border-slate hover:border-gold text-cream hover:text-gold px-4 py-2 rounded-lg text-sm transition-colors">Reschedule</button>
+                                    <button class="text-silver hover:text-error text-xs">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if(role === 'customer' && view === 'profile') {
+                    content = `
+                        <h2 class="font-serif text-3xl text-cream mb-8">My Profile</h2>
+                        <div class="flex items-center gap-6 mb-10">
+                            <div class="w-24 h-24 rounded-full bg-slate flex items-center justify-center text-silver text-2xl font-serif">JD</div>
+                            <button class="text-gold text-sm font-medium hover:underline">Change Photo</button>
+                        </div>
+                        <div class="max-w-xl space-y-6">
+                            <div><label class="text-silver text-sm block mb-1">Full Name</label><input type="text" value="John Doe" class="w-full bg-charcoal border border-slate rounded-lg p-3 text-cream"></div>
+                            <div><label class="text-silver text-sm block mb-1">Email</label><input type="email" value="john@email.com" disabled class="w-full bg-obsidian border border-slate rounded-lg p-3 text-silver"></div>
+                            <div class="pt-6 border-t border-slate">
+                                <h3 class="text-cream font-medium mb-4">Notifications</h3>
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-silver text-sm">Email Confirmations</span>
+                                    <div class="w-10 h-6 bg-gold rounded-full relative cursor-pointer"><div class="absolute right-1 top-1 w-4 h-4 bg-obsidian rounded-full"></div></div>
+                                </div>
+                            </div>
+                            <button class="bg-gold text-obsidian px-6 py-3 rounded-lg font-medium uppercase text-sm">Save Changes</button>
+                        </div>
+                    `;
+                }
+                
+                // BARBER CONTENT
+                else if(role === 'barber' && view === 'today') {
+                    content = `
+                        <div class="flex justify-between items-end mb-8">
+                            <div>
+                                <h2 class="font-serif text-3xl text-cream">Today's Schedule</h2>
+                                <p class="text-silver">Tuesday, January 14</p>
+                            </div>
+                            <button class="bg-charcoal border border-slate text-silver hover:text-gold px-4 py-2 rounded-lg text-sm">Refresh</button>
+                        </div>
+                        
+                        <!-- Stats -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            ${[{l:'Appointments', v:'8'}, {l:'Next Client', v:'John D.'}, {l:'Earnings', v:'$280'}, {l:'Walk-ins', v:'2'}].map(s => `
+                                <div class="bg-charcoal border border-slate p-4 rounded-xl">
+                                    <div class="text-2xl text-gold font-bold font-serif mb-1">${s.v}</div>
+                                    <div class="text-xs text-silver uppercase">${s.l}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="relative pl-8 border-l border-slate space-y-8">
+                            <div class="absolute top-[180px] left-0 w-full h-px bg-gold z-10 flex items-center">
+                                <div class="w-2 h-2 bg-gold rounded-full -ml-[5px]"></div>
+                                <span class="text-gold text-xs font-bold ml-2 bg-obsidian px-1">Current Time</span>
+                            </div>
+
+                            <div class="relative">
+                                <span class="absolute -left-[54px] top-0 text-sm text-silver font-mono">09:30</span>
+                                <div class="bg-charcoal/50 border border-slate p-4 rounded-xl opacity-60">
+                                    <div class="flex justify-between mb-1"><span class="text-cream line-through">John Doe</span> <span class="text-success text-xs px-2 py-0.5 bg-success/10 rounded">Completed</span></div>
+                                    <div class="text-xs text-silver">Classic Haircut</div>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <span class="absolute -left-[54px] top-0 text-sm text-silver font-mono">10:00</span>
+                                <div class="bg-charcoal border border-gold p-4 rounded-xl shadow-[0_0_15px_rgba(201,162,39,0.1)]">
+                                    <div class="flex justify-between mb-1"><span class="text-cream font-medium">Mike Smith</span> <span class="text-gold text-xs px-2 py-0.5 bg-gold/10 rounded animate-pulse">In Progress</span></div>
+                                    <div class="text-xs text-silver mb-3">Signature Fade • 45 min</div>
+                                    <div class="flex gap-2">
+                                        <button class="bg-success text-obsidian text-xs px-3 py-1.5 rounded font-medium">Complete</button>
+                                        <button class="bg-slate text-silver hover:text-white text-xs px-3 py-1.5 rounded">Add Note</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <span class="absolute -left-[54px] top-0 text-sm text-silver font-mono">10:45</span>
+                                <div class="bg-charcoal border border-slate p-4 rounded-xl">
+                                    <div class="flex justify-between mb-1"><span class="text-cream">Robert Chen</span> <span class="text-silver text-xs px-2 py-0.5 bg-slate rounded">Upcoming</span></div>
+                                    <div class="text-xs text-silver">Beard Sculpting</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if(role === 'barber' && view === 'appointments') {
+                    content = `
+                        <h2 class="font-serif text-3xl text-cream mb-6">All Appointments</h2>
+                        <div class="bg-charcoal border border-slate rounded-xl overflow-hidden">
+                            <div class="p-4 border-b border-slate flex gap-4">
+                                <input placeholder="Search client..." class="bg-obsidian border border-slate rounded px-3 py-1.5 text-sm text-cream outline-none focus:border-gold">
+                            </div>
+                            <table class="w-full text-left text-sm text-silver">
+                                <thead class="bg-obsidian text-xs uppercase tracking-wider">
+                                    <tr><th class="p-4">Time</th><th class="p-4">Customer</th><th class="p-4">Service</th><th class="p-4">Status</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate">
+                                    ${[1,2,3,4,5].map(i => `
+                                        <tr class="hover:bg-obsidian/50">
+                                            <td class="p-4">Jan 14, 10:00 AM</td>
+                                            <td class="p-4 text-cream font-medium">Client ${i}</td>
+                                            <td class="p-4">Haircut</td>
+                                            <td class="p-4"><span class="bg-success/10 text-success px-2 py-1 rounded text-xs">Confirmed</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+
+                // ADMIN CONTENT
+                else if(role === 'admin' && view === 'overview') {
+                    content = `
+                        <div class="flex justify-between items-center mb-8">
+                            <h2 class="font-serif text-3xl text-cream">Dashboard</h2>
+                            <span class="text-silver text-sm">Jan 14, 2025</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                            ${[
+                                {l:'Bookings Today', v:'24', t:'+12%', c:'text-success'},
+                                {l:'Revenue Today', v:'$840', t:'+8%', c:'text-success'},
+                                {l:'New Customers', v:'8', t:'This week', c:'text-silver'},
+                                {l:'Avg Rating', v:'4.9', t:'Stars', c:'text-gold'}
+                            ].map(c => `
+                                <div class="bg-charcoal border border-slate p-6 rounded-xl">
+                                    <div class="text-xs text-silver uppercase tracking-wider mb-2">${c.l}</div>
+                                    <div class="flex items-end justify-between">
+                                        <span class="text-3xl text-cream font-medium">${c.v}</span>
+                                        <span class="text-xs ${c.c} mb-1">${c.t}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                            <div class="bg-charcoal border border-slate p-6 rounded-xl h-64 flex items-center justify-center text-silver">
+                                [Revenue Chart Placeholder]
+                            </div>
+                            <div class="bg-charcoal border border-slate p-6 rounded-xl h-64 flex items-center justify-center text-silver">
+                                [Bookings Chart Placeholder]
+                            </div>
+                        </div>
+
+                        <h3 class="text-cream font-medium mb-4">Recent Bookings</h3>
+                        <div class="bg-charcoal border border-slate rounded-xl overflow-hidden">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-obsidian text-silver text-xs uppercase">
+                                    <tr><th class="p-4">Customer</th><th class="p-4">Service</th><th class="p-4">Barber</th><th class="p-4">Time</th></tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate text-silver">
+                                    <tr><td class="p-4 text-cream">John Doe</td><td class="p-4">Fade</td><td class="p-4">Marcus</td><td class="p-4">Today 3:30</td></tr>
+                                    <tr><td class="p-4 text-cream">Mike Ross</td><td class="p-4">Shave</td><td class="p-4">James</td><td class="p-4">Today 4:15</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else if(role === 'admin' && view === 'services') {
+                    content = `
+                        <div class="flex justify-between items-center mb-8">
+                            <h2 class="font-serif text-3xl text-cream">Manage Services</h2>
+                            <button class="bg-gold text-obsidian px-4 py-2 rounded-lg font-medium text-sm">Add Service</button>
+                        </div>
+                        <div class="grid gap-4">
+                            ${services.map(s => `
+                                <div class="bg-charcoal border border-slate p-4 rounded-xl flex items-center justify-between group hover:border-gold transition-colors">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-obsidian rounded-lg flex items-center justify-center text-gold"><span class="iconify" data-icon="${s.icon}"></span></div>
+                                        <div>
+                                            <h4 class="text-cream font-medium">${s.name}</h4>
+                                            <p class="text-xs text-silver">$${s.price} • ${s.duration} min</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                        <button class="p-2 hover:text-gold"><span class="iconify" data-icon="lucide:edit-2"></span></button>
+                                        <button class="p-2 hover:text-error"><span class="iconify" data-icon="lucide:trash"></span></button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                // Default fallback for other demo pages
+                if(!content) content = `<div class="p-12 text-center text-silver">Content for ${view} would go here.</div>`;
+
+                return `
+                    <div class="min-h-screen bg-obsidian flex -mt-20 pt-20">
+                        <!-- Sidebar -->
+                        <aside class="w-64 bg-charcoal border-r border-slate hidden lg:flex flex-col">
+                            <div class="p-6 border-b border-slate">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gold flex items-center justify-center text-obsidian font-bold text-lg">${role.charAt(0).toUpperCase()}</div>
+                                    <div>
+                                        <div class="text-cream font-medium text-sm capitalize">${role} Panel</div>
+                                        <div class="text-xs text-silver">Logged in</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <nav class="flex-1 p-4 space-y-1">
+                                ${links.map(link => `
+                                    <button onclick="router.navigate('${prefix}${link.id}')" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${view === link.id ? 'bg-gold/10 text-gold border-r-2 border-gold' : 'text-silver hover:bg-obsidian hover:text-cream'}">
+                                        <span class="iconify w-5 h-5" data-icon="lucide:${link.icon}"></span>
+                                        ${link.label}
+                                    </button>
+                                `).join('')}
+                            </nav>
+                            <div class="p-4 border-t border-slate">
+                                <button onclick="router.navigate('home')" class="w-full flex items-center gap-3 px-4 py-2 text-sm text-silver hover:text-error transition-colors">
+                                    <span class="iconify" data-icon="lucide:log-out"></span> Sign Out
+                                </button>
+                            </div>
+                        </aside>
+
+                        <!-- Mobile Nav Strip (Visible only on small screens) -->
+                        <div class="lg:hidden w-full fixed bottom-0 left-0 bg-charcoal border-t border-slate z-40 flex justify-around p-3">
+                             ${links.map(link => `
+                                <button onclick="router.navigate('${prefix}${link.id}')" class="flex flex-col items-center ${view === link.id ? 'text-gold' : 'text-silver'}">
+                                    <span class="iconify w-5 h-5" data-icon="lucide:${link.icon}"></span>
+                                    <span class="text-[10px] mt-1">${link.label}</span>
+                                </button>
+                             `).join('')}
+                        </div>
+
+                        <!-- Main Content -->
+                        <main class="flex-1 p-6 lg:p-12 overflow-y-auto mb-16 lg:mb-0">
+                            <div class="max-w-5xl mx-auto animate-fade-in">
+                                ${content}
+                            </div>
+                        </main>
+                    </div>
+                `;
+            },
+
+            // --- NAVIGATE FUNCTION ---
+            navigate: function(page) {
+                const app = document.getElementById('app');
+                const navbar = document.getElementById('navbar');
+                const footer = document.getElementById('footer');
+
+                // Update content
+                if (this.routes[page]) {
+                    app.innerHTML = this.routes[page]();
+                    this.currentPage = page;
+                    window.scrollTo(0, 0);
+                } else {
+                    console.error('Route not found:', page);
+                    return;
+                }
+
+                // Layout logic: Hide/Show Nav & Footer based on page type
+                const isAuth = ['login', 'register'].includes(page);
+                const isDashboard = page.includes('customer-') || page.includes('barber-') || page.includes('admin-');
+                
+                if (isAuth || isDashboard) {
+                    navbar.style.display = 'none';
+                    footer.style.display = 'none';
+                    app.classList.remove('pt-20');
+                } else {
+                    navbar.style.display = 'block';
+                    footer.style.display = 'block';
+                    app.classList.add('pt-20');
+                }
+            }
+        };
+
+        // --- INIT ---
+        window.addEventListener('load', () => {
+            router.navigate('home');
+        });
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+    </script>
+
+</body></html>
