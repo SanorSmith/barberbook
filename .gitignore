@@ -40,9 +40,11 @@ next-env.d.ts
 .env.local
 .env.production
 
-# Debug SQL files
-*.sql
-!supabase/schema.sql
+# Debug SQL files (allow all supabase SQL files)
+fix-*.sql
+check-*.sql
+database-*.sql
+disable-*.sql
 
 # IDE files
 .vscode/

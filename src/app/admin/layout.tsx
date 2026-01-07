@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar'
+import AdminSidebar from '@/components/admin/AdminSidebar'
 
-export default async function DashboardLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
@@ -14,24 +14,20 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
-  // Get user's profile with role
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
 
-  // Redirect non-customers to their correct dashboard
-  if (profile?.role === 'admin') {
-    redirect('/admin')
-  } else if (profile?.role === 'barber') {
-    redirect('/barber')
+  if (profile?.role !== 'admin') {
+    redirect('/dashboard')
   }
 
   return (
     <div className="min-h-screen bg-obsidian">
       <div className="flex">
-        <DashboardSidebar user={profile} />
+        <AdminSidebar user={profile} />
         <main className="flex-1 p-8">
           {children}
         </main>

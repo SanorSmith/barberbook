@@ -12,6 +12,19 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check environment variables
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing environment variables:', {
+        url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        anon: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        service: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      })
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
     // Create Supabase clients
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,56 +54,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create profile record using service role to bypass RLS
-    if (authData.user && authData.user.id) {
-      // Wait a bit for the auth user to be fully created
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Try direct SQL insert to bypass any RLS issues
-      const { error: profileError } = await serviceRoleSupabase
-        .rpc('insert_profile', {
-          p_id: authData.user.id,
-          p_email: authData.user.email || email,
-          p_full_name: fullName,
-          p_role: 'customer'
-        })
-
-      if (profileError) {
-        // Fallback to regular insert if RPC doesn't exist
-        console.log('RPC failed, trying direct insert...')
-        const { error: insertError } = await serviceRoleSupabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            email: authData.user.email || email,
-            full_name: fullName,
-            role: 'customer'
-          })
-
-        if (insertError) {
-          console.error('Profile creation error:', insertError)
-          console.error('Error details:', insertError.details)
-          console.error('Error hint:', insertError.hint)
-          // Delete the auth user if profile creation fails
-          try {
-            await supabase.auth.admin.deleteUser(authData.user.id)
-          } catch (deleteError) {
-            console.error('Failed to delete auth user:', deleteError)
-          }
-          return NextResponse.json(
-            { 
-              error: `Database error: ${insertError.message}`,
-              details: insertError.details,
-              hint: insertError.hint
-            },
-            { status: 500 }
-          )
-        }
-      }
-    }
+    // Profile is automatically created by database trigger
+    // No need to create it manually
 
     return NextResponse.json(
-      { message: 'Account created! Please check your email to confirm.' },
+      { message: 'Account created successfully!' },
       { status: 200 }
     )
   } catch (error) {

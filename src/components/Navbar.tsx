@@ -3,58 +3,39 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getCurrentUser, signOut, getDashboardPath, type AuthUser } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
+import LanguageSwitcher from './LanguageSwitcher'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
   const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        setUserRole(profile?.role || null)
-      }
-      
-      setLoading(false)
-    }
-    getUser()
+    loadUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single()
-        setUserRole(profile?.role || null)
-      } else {
-        setUserRole(null)
-      }
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadUser()
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [])
+
+  const loadUser = async () => {
+    setLoading(true)
+    const currentUser = await getCurrentUser()
+    setUser(currentUser)
+    setLoading(false)
+  }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    await signOut()
     setUser(null)
     router.push('/')
-    router.refresh()
   }
 
   return (
@@ -85,16 +66,13 @@ export default function Navbar() {
           </div>
 
           {/* Right Buttons */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-4">
+            <LanguageSwitcher />
             {!loading && (
               user ? (
                 <>
                   <Link 
-                    href={
-                      userRole === 'admin' ? '/dashboard/admin' :
-                      userRole === 'barber' ? '/dashboard/barber' :
-                      '/dashboard'
-                    } 
+                    href={getDashboardPath(user.role)} 
                     className="text-sm font-medium hover:text-gold transition-colors"
                   >
                     Dashboard
@@ -152,11 +130,7 @@ export default function Navbar() {
               user ? (
                 <>
                   <Link 
-                    href={
-                      userRole === 'admin' ? '/dashboard/admin' :
-                      userRole === 'barber' ? '/dashboard/barber' :
-                      '/dashboard'
-                    } 
+                    href={getDashboardPath(user.role)} 
                     className="block px-3 py-3 text-base font-medium hover:text-gold" 
                     onClick={() => setMobileMenuOpen(false)}
                   >

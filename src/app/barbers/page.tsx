@@ -1,8 +1,29 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
-import { barbers } from '@/lib/data'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function BarbersPage() {
+  const [barbers, setBarbers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    loadBarbers()
+  }, [])
+
+  const loadBarbers = async () => {
+    const { data } = await supabase
+      .from('barbers')
+      .select('*')
+      .eq('is_active', true)
+      .order('rating', { ascending: false })
+
+    setBarbers(data || [])
+    setLoading(false)
+  }
   return (
     <>
       <div className="bg-charcoal py-16 border-b border-slate">
@@ -25,8 +46,13 @@ export default function BarbersPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {barbers.map((barber) => (
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {barbers.map((barber) => (
             <div key={barber.id} className="bg-charcoal border border-slate rounded-2xl overflow-hidden group">
               <div className="h-80 overflow-hidden relative">
                 <Image
@@ -49,7 +75,7 @@ export default function BarbersPage() {
                 </div>
                 <p className="text-silver text-sm mb-4">{barber.role}</p>
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {barber.specialties.map((specialty) => (
+                  {barber.specialties && Array.isArray(barber.specialties) && barber.specialties.map((specialty: string) => (
                     <span key={specialty} className="bg-slate text-gold text-xs px-2 py-1 rounded-full">
                       {specialty}
                     </span>
@@ -77,8 +103,9 @@ export default function BarbersPage() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   )

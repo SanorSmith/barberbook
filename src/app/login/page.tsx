@@ -3,8 +3,8 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { signIn, getCurrentUser, getDashboardPath } from '@/lib/auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,27 +12,32 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError(error.message)
+    try {
+      await signIn(email, password)
+      
+      // Get user role and redirect accordingly
+      const user = await getCurrentUser()
+      if (user) {
+        const dashboardPath = getDashboardPath(user.role)
+        router.push(dashboardPath)
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (err: any) {
+      setError(err.message)
       setLoading(false)
-    } else {
-      router.push('/dashboard')
     }
   }
 
   const handleGoogleLogin = async () => {
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

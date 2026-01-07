@@ -1,350 +1,418 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { services, barbers } from '@/lib/data'
-import { createClient } from '@/lib/supabase/client'
-
-type Step = 1 | 2 | 3 | 4
+import { getAllServices, type Service } from '@/lib/services'
+import { getAllBarbers, type Barber } from '@/lib/barbers'
+import { getAvailableSlots, type TimeSlot } from '@/lib/availability'
+import { createBooking } from '@/lib/bookings'
 
 export default function BookingPage() {
-  const [step, setStep] = useState<Step>(1)
-  const [selectedService, setSelectedService] = useState<number | null>(null)
-  const [selectedBarber, setSelectedBarber] = useState<number | null>(null)
-  const [selectedDate, setSelectedDate] = useState<number>(15)
-  const [selectedTime, setSelectedTime] = useState<string>('3:30 PM')
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  const [services, setServices] = useState<Service[]>([])
+  const [barbers, setBarbers] = useState<Barber[]>([])
+  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
+  
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
+  const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [selectedTime, setSelectedTime] = useState<string>('')
   const [notes, setNotes] = useState('')
-  const [agreed, setAgreed] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
-  const times = ['9:00 AM', '9:30 AM', '10:00 AM', '11:30 AM', '1:00 PM', '2:30 PM', '3:30 PM', '4:00 PM', '5:30 PM']
+  useEffect(() => {
+    loadServices()
+  }, [])
 
-  const convertTo24Hour = (time12h: string) => {
-    const [time, modifier] = time12h.split(' ')
-    let [hours, minutes] = time.split(':')
-    if (hours === '12') hours = '00'
-    if (modifier === 'PM') hours = String(parseInt(hours, 10) + 12)
-    return `${hours.padStart(2, '0')}:${minutes}:00`
+  useEffect(() => {
+    if (step === 2) {
+      loadBarbers()
+    }
+  }, [step])
+
+  useEffect(() => {
+    if (step === 3 && selectedBarber && selectedService && selectedDate) {
+      loadAvailableSlots()
+    }
+  }, [step, selectedBarber, selectedService, selectedDate])
+
+  const loadServices = async () => {
+    try {
+      const data = await getAllServices()
+      console.log('Loaded services for booking:', data)
+      setServices(data)
+      if (data.length === 0) {
+        setError('No services available. Please contact support.')
+      }
+    } catch (err) {
+      console.error('Failed to load services:', err)
+      setError('Failed to load services. Please refresh the page.')
+    }
   }
 
-  const handleConfirm = async () => {
-    setIsLoading(true)
+  const loadBarbers = async () => {
+    try {
+      const data = await getAllBarbers()
+      setBarbers(data)
+    } catch (err) {
+      console.error('Failed to load barbers:', err)
+    }
+  }
+
+  const loadAvailableSlots = async () => {
+    if (!selectedBarber || !selectedService || !selectedDate) return
+    
+    setLoading(true)
+    try {
+      const slots = await getAvailableSlots(
+        selectedBarber.id,
+        selectedDate,
+        selectedService.duration
+      )
+      setAvailableSlots(slots)
+    } catch (err) {
+      console.error('Failed to load slots:', err)
+    }
+    setLoading(false)
+  }
+
+  const handleConfirmBooking = async () => {
+    if (!selectedService || !selectedBarber || !selectedDate || !selectedTime) {
+      setError('Please complete all booking details')
+      return
+    }
+
+    setLoading(true)
     setError(null)
 
-    // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      router.push('/login?redirect=/booking')
-      return
-    }
-
-    // Ensure user profile exists
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile) {
-      // Create profile if it doesn't exist
-      await supabase.from('profiles').insert({
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name || null
+    try {
+      await createBooking({
+        service_id: selectedService.id,
+        barber_id: selectedBarber.id,
+        booking_date: selectedDate,
+        booking_time: selectedTime,
+        notes: notes || undefined
       })
+
+      router.push('/booking/success')
+    } catch (err: any) {
+      setError(err.message || 'Failed to create booking')
+      setLoading(false)
     }
-
-    // Format date as YYYY-MM-DD
-    const year = new Date().getFullYear()
-    const bookingDate = `${year}-01-${selectedDate.toString().padStart(2, '0')}`
-    const bookingTime = convertTo24Hour(selectedTime)
-
-    // Get the service price
-    const service = services.find(s => s.id === selectedService)
-
-    const { error: insertError, data } = await supabase
-      .from('bookings')
-      .insert({
-        user_id: user.id,
-        service_id: selectedService,
-        barber_id: selectedBarber === 0 ? 1 : selectedBarber, // Default to first barber if "Any"
-        booking_date: bookingDate,
-        booking_time: bookingTime,
-        status: 'confirmed',
-        notes: notes || null,
-        total_price: service?.price || 0
-      })
-      .select()
-
-    if (insertError) {
-      console.error('Booking error:', insertError.message, insertError.details, insertError.hint)
-      setError(`Failed to create booking: ${insertError.message}`)
-      setIsLoading(false)
-      return
-    }
-
-    router.push('/booking/success')
   }
 
-  const getSelectedService = () => services.find(s => s.id === selectedService)
-  const getSelectedBarber = () => barbers.find(b => b.id === selectedBarber)
+  const getNextWeekDates = () => {
+    const dates = []
+    const today = new Date()
+    for (let i = 1; i <= 14; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      dates.push(date)
+    }
+    return dates
+  }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      {/* Progress */}
-      <div className="flex justify-between mb-12 relative">
-        <div className="absolute top-1/2 left-0 w-full h-px bg-slate -z-10"></div>
-        {['Service', 'Barber', 'Time', 'Confirm'].map((label, i) => (
-          <div 
-            key={label}
-            className={`bg-obsidian px-4 py-2 border rounded-full text-sm font-medium transition-colors duration-300 ${
-              i + 1 < step ? 'text-gold border-gold' : 
-              i + 1 === step ? 'text-cream border-gold' : 
-              'text-silver border-slate'
-            }`}
-          >
-            <span className="mr-2">{i + 1}</span>{label}
+    <div className="min-h-screen bg-obsidian py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Progress Steps */}
+        <div className="mb-12">
+          <div className="relative flex items-center justify-between mb-4">
+            {[1, 2, 3, 4].map((s, index) => (
+              <div key={s} className="flex flex-col items-center" style={{ width: index === 0 || index === 3 ? 'auto' : '100%' }}>
+                <div className="relative z-10 flex items-center justify-center">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg ${
+                    step >= s ? 'bg-gold text-obsidian' : 'bg-charcoal text-silver border-2 border-slate'
+                  }`}>
+                    {s}
+                  </div>
+                </div>
+                <span className={`mt-3 text-sm whitespace-nowrap ${step >= s ? 'text-gold font-medium' : 'text-silver'}`}>
+                  {s === 1 && 'Service'}
+                  {s === 2 && 'Barber'}
+                  {s === 3 && 'Date & Time'}
+                  {s === 4 && 'Confirm'}
+                </span>
+              </div>
+            ))}
+            {/* Connecting lines */}
+            <div className="absolute top-6 left-0 right-0 flex items-center px-6" style={{ zIndex: 0 }}>
+              <div className={`h-0.5 flex-1 ${step > 1 ? 'bg-gold' : 'bg-slate'}`} style={{ marginLeft: '24px', marginRight: '12px' }} />
+              <div className={`h-0.5 flex-1 ${step > 2 ? 'bg-gold' : 'bg-slate'}`} style={{ marginLeft: '12px', marginRight: '12px' }} />
+              <div className={`h-0.5 flex-1 ${step > 3 ? 'bg-gold' : 'bg-slate'}`} style={{ marginLeft: '12px', marginRight: '24px' }} />
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Step 1: Services */}
-      {step === 1 && (
-        <div>
-          <h2 className="font-serif text-3xl text-cream mb-8">Choose Your Service</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {services.slice(0, 4).map((service) => (
-              <div 
-                key={service.id}
-                onClick={() => setSelectedService(service.id)}
-                className={`bg-charcoal border ${selectedService === service.id ? 'border-gold' : 'border-slate'} p-6 rounded-xl cursor-pointer hover:border-gold transition-all relative`}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Step 1: Select Service */}
+        {step === 1 && (
+          <div>
+            <h2 className="font-serif text-3xl text-cream mb-6">Select a Service</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {services.map((service) => (
+                <button
+                  key={service.id}
+                  onClick={() => {
+                    setSelectedService(service)
+                    setStep(2)
+                  }}
+                  className="bg-charcoal border border-slate hover:border-gold rounded-lg p-6 text-left transition-colors"
+                >
+                  <h3 className="text-cream font-semibold text-lg mb-2">{service.name}</h3>
+                  <p className="text-silver text-sm mb-4">{service.description}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gold font-semibold">€{service.price}</span>
+                    <span className="text-silver text-sm">{service.duration} min</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Select Barber */}
+        {step === 2 && (
+          <div>
+            <h2 className="font-serif text-3xl text-cream mb-6">Choose Your Barber</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => {
+                  if (barbers.length > 0) {
+                    setSelectedBarber(barbers[0])
+                    setStep(3)
+                  }
+                }}
+                className="bg-charcoal border border-slate hover:border-gold rounded-lg p-6 text-left transition-colors"
               >
-                {selectedService === service.id && (
-                  <div className="absolute top-4 right-4 text-gold">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 rounded-full bg-gold/20 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
+                  <div>
+                    <h3 className="text-cream font-semibold text-lg">Any Available</h3>
+                    <p className="text-silver text-sm">First available barber</p>
+                  </div>
+                </div>
+              </button>
+
+              {barbers.map((barber) => (
+                <button
+                  key={barber.id}
+                  onClick={() => {
+                    setSelectedBarber(barber)
+                    setStep(3)
+                  }}
+                  className="bg-charcoal border border-slate hover:border-gold rounded-lg p-6 text-left transition-colors"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    {barber.image_url ? (
+                      <img
+                        src={barber.image_url}
+                        alt={barber.name}
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-slate flex items-center justify-center">
+                        <span className="text-2xl text-silver">{barber.name.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-cream font-semibold text-lg">{barber.name}</h3>
+                      <p className="text-silver text-sm">{barber.role}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-gold">★</span>
+                        <span className="text-silver text-sm">{barber.rating} ({barber.review_count})</span>
+                      </div>
+                    </div>
+                  </div>
+                  {barber.specialties && barber.specialties.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {barber.specialties.slice(0, 3).map((specialty, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-slate rounded text-silver text-xs">
+                          {specialty}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setStep(1)}
+              className="mt-6 px-6 py-3 text-silver hover:text-cream transition-colors"
+            >
+              ← Back
+            </button>
+          </div>
+        )}
+
+        {/* Step 3: Select Date & Time */}
+        {step === 3 && (
+          <div>
+            <h2 className="font-serif text-3xl text-cream mb-6">Choose Date & Time</h2>
+            
+            {/* Date Selection */}
+            <div className="mb-8">
+              <h3 className="text-cream font-semibold mb-4">Select Date</h3>
+              <div className="grid grid-cols-7 gap-2">
+                {getNextWeekDates().map((date) => {
+                  const dateString = date.toISOString().split('T')[0]
+                  const isSelected = selectedDate === dateString
+                  return (
+                    <button
+                      key={dateString}
+                      onClick={() => {
+                        setSelectedDate(dateString)
+                        setSelectedTime('')
+                      }}
+                      className={`p-3 rounded-lg border transition-colors ${
+                        isSelected
+                          ? 'bg-gold text-obsidian border-gold'
+                          : 'bg-charcoal text-cream border-slate hover:border-gold'
+                      }`}
+                    >
+                      <div className="text-xs">{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                      <div className="text-lg font-semibold">{date.getDate()}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Time Selection */}
+            {selectedDate && (
+              <div>
+                <h3 className="text-cream font-semibold mb-4">Select Time</h3>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="inline-block w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                    {availableSlots.map((slot) => (
+                      <button
+                        key={slot.time}
+                        onClick={() => setSelectedTime(slot.time)}
+                        disabled={!slot.available}
+                        className={`p-3 rounded-lg border transition-colors ${
+                          selectedTime === slot.time
+                            ? 'bg-gold text-obsidian border-gold'
+                            : slot.available
+                            ? 'bg-charcoal text-cream border-slate hover:border-gold'
+                            : 'bg-charcoal/50 text-silver/50 border-slate/50 cursor-not-allowed'
+                        }`}
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-silver text-center py-8">No available slots for this date</p>
                 )}
-                <h3 className="text-cream font-medium text-lg">{service.name}</h3>
-                <p className="text-silver text-sm mb-4">{service.description}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-gold font-semibold">${service.price}</span>
-                  <span className="text-xs text-silver flex items-center">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {service.duration}m
+              </div>
+            )}
+
+            <div className="flex gap-4 mt-8">
+              <button
+                onClick={() => setStep(2)}
+                className="px-6 py-3 text-silver hover:text-cream transition-colors"
+              >
+                ← Back
+              </button>
+              {selectedTime && (
+                <button
+                  onClick={() => setStep(4)}
+                  className="px-6 py-3 bg-gold hover:bg-gold-hover text-obsidian rounded-lg font-semibold transition-colors"
+                >
+                  Continue
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Confirm */}
+        {step === 4 && selectedService && selectedBarber && (
+          <div>
+            <h2 className="font-serif text-3xl text-cream mb-6">Confirm Your Booking</h2>
+            
+            <div className="bg-charcoal border border-slate rounded-lg p-6 mb-6">
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-silver">Service:</span>
+                  <span className="text-cream font-semibold">{selectedService.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-silver">Barber:</span>
+                  <span className="text-cream font-semibold">{selectedBarber.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-silver">Date:</span>
+                  <span className="text-cream font-semibold">
+                    {new Date(selectedDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-silver">Time:</span>
+                  <span className="text-cream font-semibold">{selectedTime}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-silver">Duration:</span>
+                  <span className="text-cream font-semibold">{selectedService.duration} minutes</span>
+                </div>
+                <div className="border-t border-slate pt-4 flex justify-between">
+                  <span className="text-silver">Total:</span>
+                  <span className="text-gold font-semibold text-xl">€{selectedService.price}</span>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="flex justify-end border-t border-slate pt-6">
-            <button 
-              onClick={() => setStep(2)}
-              disabled={!selectedService}
-              className="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider disabled:opacity-50"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
+            </div>
 
-      {/* Step 2: Barber */}
-      {step === 2 && (
-        <div>
-          <h2 className="font-serif text-3xl text-cream mb-8">Choose Your Barber</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div 
-              onClick={() => setSelectedBarber(0)}
-              className={`bg-charcoal border ${selectedBarber === 0 ? 'border-gold' : 'border-slate'} hover:border-gold p-6 rounded-xl cursor-pointer flex flex-col items-center justify-center text-center h-full`}
-            >
-              <div className="w-16 h-16 bg-slate rounded-full flex items-center justify-center mb-4 text-gold">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-cream font-medium">Any Available</h3>
-              <p className="text-xs text-silver mt-1">For the soonest slot</p>
-            </div>
-            {barbers.slice(0, 2).map((barber) => (
-              <div 
-                key={barber.id}
-                onClick={() => setSelectedBarber(barber.id)}
-                className={`bg-charcoal border ${selectedBarber === barber.id ? 'border-gold' : 'border-slate'} hover:border-gold p-6 rounded-xl cursor-pointer text-center group`}
-              >
-                <div className="relative w-20 h-20 rounded-full mx-auto mb-4 border-2 border-transparent group-hover:border-gold overflow-hidden">
-                  <Image src={barber.image} alt={barber.name} fill className="object-cover" />
-                </div>
-                <h3 className="text-cream font-medium">{barber.name}</h3>
-                <div className="flex justify-center text-gold text-xs my-2">
-                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                  {barber.rating}
-                </div>
-                <p className="text-success text-xs">Next: Today 3:30 PM</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between border-t border-slate pt-6">
-            <button onClick={() => setStep(1)} className="text-silver hover:text-cream px-6 py-3 uppercase text-sm font-medium">
-              Back
-            </button>
-            <button 
-              onClick={() => setStep(3)}
-              disabled={selectedBarber === null}
-              className="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider disabled:opacity-50"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Time */}
-      {step === 3 && (
-        <div>
-          <h2 className="font-serif text-3xl text-cream mb-8">Select Date & Time</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* Calendar */}
-            <div className="bg-charcoal border border-slate rounded-xl p-6">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-cream font-medium">January 2025</span>
-                <div className="flex gap-2">
-                  <button className="p-1 hover:text-gold">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button className="p-1 hover:text-gold">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div className="grid grid-cols-7 gap-2 text-center text-sm mb-2 text-silver">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d}>{d}</span>)}
-              </div>
-              <div className="grid grid-cols-7 gap-2 text-center text-sm">
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
-                  <div
-                    key={day}
-                    onClick={() => day >= 14 && setSelectedDate(day)}
-                    className={`p-2 rounded cursor-pointer ${
-                      day === selectedDate ? 'bg-gold text-obsidian font-bold shadow-lg shadow-gold/20' :
-                      day < 14 ? 'text-slate cursor-not-allowed' :
-                      'text-cream hover:bg-slate'
-                    }`}
-                  >
-                    {day}
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Slots */}
-            <div>
-              <h3 className="text-silver text-sm uppercase tracking-wider mb-4">Available Times • Jan {selectedDate}</h3>
-              <div className="grid grid-cols-3 gap-3">
-                {times.map((time) => (
-                  <button
-                    key={time}
-                    onClick={() => setSelectedTime(time)}
-                    className={`py-2 rounded border text-sm transition-all ${
-                      time === selectedTime ? 'bg-gold border-gold text-obsidian' : 'bg-charcoal border-slate text-cream hover:border-gold'
-                    }`}
-                  >
-                    {time}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-between border-t border-slate pt-6">
-            <button onClick={() => setStep(2)} className="text-silver hover:text-cream px-6 py-3 uppercase text-sm font-medium">
-              Back
-            </button>
-            <button 
-              onClick={() => setStep(4)}
-              className="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider"
-            >
-              Continue
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Confirm */}
-      {step === 4 && (
-        <div>
-          <h2 className="font-serif text-3xl text-cream mb-8">Confirm Booking</h2>
-          {error && (
-            <div className="bg-error/10 border border-error text-error px-4 py-3 rounded-lg mb-6 text-sm">
-              {error}
-            </div>
-          )}
-          <div className="bg-charcoal border border-slate rounded-2xl p-8 mb-8">
-            <div className="flex items-start gap-6 mb-6">
-              {getSelectedBarber() && (
-                <div className="relative w-16 h-16 rounded-lg overflow-hidden">
-                  <Image src={getSelectedBarber()!.image} alt="" fill className="object-cover" />
-                </div>
-              )}
-              <div>
-                <h3 className="text-cream text-lg font-medium">{getSelectedService()?.name}</h3>
-                <p className="text-gold">with {selectedBarber === 0 ? 'Any Available Barber' : getSelectedBarber()?.name}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-y-4 text-sm border-t border-b border-slate py-6 mb-6">
-              <div className="text-silver">Date</div>
-              <div className="text-right text-cream">Jan {selectedDate}, 2025</div>
-              <div className="text-silver">Time</div>
-              <div className="text-right text-cream">{selectedTime}</div>
-              <div className="text-silver">Duration</div>
-              <div className="text-right text-cream">{getSelectedService()?.duration} min</div>
-            </div>
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-lg text-cream">Total</span>
-              <span className="text-2xl text-gold font-serif font-bold">${getSelectedService()?.price}.00</span>
-            </div>
-            <textarea 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-obsidian border border-slate rounded-lg p-4 text-sm text-cream mb-4 focus:border-gold outline-none" 
-              placeholder="Any special requests?"
-            />
-            <label className="flex items-center text-sm text-silver cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="mr-3 rounded border-slate bg-obsidian text-gold focus:ring-gold"
+            <div className="mb-6">
+              <label className="block text-silver mb-2">Additional Notes (Optional)</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full bg-charcoal border border-slate rounded-lg p-4 text-cream focus:border-gold outline-none transition-colors"
+                rows={3}
+                placeholder="Any special requests or notes..."
               />
-              I agree to the cancellation policy (2 hour notice)
-            </label>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setStep(3)}
+                className="px-6 py-3 text-silver hover:text-cream transition-colors"
+                disabled={loading}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleConfirmBooking}
+                disabled={loading}
+                className="flex-1 px-6 py-3 bg-gold hover:bg-gold-hover text-obsidian rounded-lg font-semibold transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Booking...' : 'Confirm Booking'}
+              </button>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <button onClick={() => setStep(3)} className="text-silver hover:text-cream px-6 py-3 uppercase text-sm font-medium">
-              Back
-            </button>
-            <button 
-              onClick={handleConfirm}
-              disabled={!agreed || isLoading}
-              className="bg-gold hover:bg-gold-hover text-obsidian px-8 py-3 rounded-lg font-semibold uppercase tracking-wider w-full sm:w-auto disabled:opacity-50"
-            >
-              {isLoading ? 'Booking...' : 'Confirm Booking'}
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

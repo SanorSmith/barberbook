@@ -1,8 +1,43 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
-import { services } from '@/lib/data'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function ServicesPage() {
+  const [services, setServices] = useState<any[]>([])
+  const [filteredServices, setFilteredServices] = useState<any[]>([])
+  const [activeCategory, setActiveCategory] = useState('all')
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    loadServices()
+  }, [])
+
+  useEffect(() => {
+    filterServices()
+  }, [activeCategory, services])
+
+  const loadServices = async () => {
+    const { data } = await supabase
+      .from('services')
+      .select('*')
+      .eq('is_active', true)
+      .order('id', { ascending: true })
+
+    setServices(data || [])
+    setLoading(false)
+  }
+
+  const filterServices = () => {
+    if (activeCategory === 'all') {
+      setFilteredServices(services)
+    } else {
+      setFilteredServices(services.filter(s => s.category === activeCategory.toUpperCase()))
+    }
+  }
   return (
     <>
       {/* Hero */}
@@ -45,14 +80,39 @@ export default function ServicesPage() {
         {/* Services Grid */}
         <div className="lg:col-span-3">
           <div className="flex space-x-6 border-b border-slate mb-8 overflow-x-auto">
-            <button className="pb-3 border-b-2 border-gold text-gold font-medium whitespace-nowrap">All Services</button>
-            <button className="pb-3 border-b-2 border-transparent text-silver hover:text-cream whitespace-nowrap">Haircuts</button>
-            <button className="pb-3 border-b-2 border-transparent text-silver hover:text-cream whitespace-nowrap">Beard</button>
-            <button className="pb-3 border-b-2 border-transparent text-silver hover:text-cream whitespace-nowrap">Packages</button>
+            <button 
+              onClick={() => setActiveCategory('all')}
+              className={`pb-3 border-b-2 font-medium whitespace-nowrap ${activeCategory === 'all' ? 'border-gold text-gold' : 'border-transparent text-silver hover:text-cream'}`}
+            >
+              All Services
+            </button>
+            <button 
+              onClick={() => setActiveCategory('haircut')}
+              className={`pb-3 border-b-2 font-medium whitespace-nowrap ${activeCategory === 'haircut' ? 'border-gold text-gold' : 'border-transparent text-silver hover:text-cream'}`}
+            >
+              Haircuts
+            </button>
+            <button 
+              onClick={() => setActiveCategory('beard')}
+              className={`pb-3 border-b-2 font-medium whitespace-nowrap ${activeCategory === 'beard' ? 'border-gold text-gold' : 'border-transparent text-silver hover:text-cream'}`}
+            >
+              Beard
+            </button>
+            <button 
+              onClick={() => setActiveCategory('package')}
+              className={`pb-3 border-b-2 font-medium whitespace-nowrap ${activeCategory === 'package' ? 'border-gold text-gold' : 'border-transparent text-silver hover:text-cream'}`}
+            >
+              Packages
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {services.map((service) => (
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredServices.map((service) => (
               <div key={service.id} className="bg-charcoal border border-slate rounded-2xl p-6 flex flex-col hover:border-gold transition-colors">
                 <div className="flex justify-between items-start mb-4">
                   <span className="bg-gold/10 text-gold text-xs px-2 py-1 rounded-full font-medium tracking-wider">
@@ -77,8 +137,9 @@ export default function ServicesPage() {
                   Book This Service
                 </Link>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
