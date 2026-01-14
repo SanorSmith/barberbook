@@ -80,12 +80,16 @@ export async function POST(request: Request) {
     }
 
     // Create auth user with normalized email
+    // Note: Only 'customer' role can be created via UI registration
+    // Admin users must be created via Supabase SQL Editor
+    // Barber users must be created by admin through dashboard
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
       options: {
         data: {
           full_name: fullName,
+          role: 'customer', // Force customer role for UI registration
         },
       },
     })
@@ -104,8 +108,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Profile is automatically created by database trigger
-    // No need to create it manually
+    // Profile is automatically created by database trigger with 'customer' role
+    // Admin role can ONLY be set via Supabase SQL Editor
+    // Barber role can ONLY be set by admin through dashboard
 
     return NextResponse.json(
       { message: 'Account created successfully!' },
