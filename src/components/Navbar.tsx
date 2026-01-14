@@ -3,14 +3,21 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getCurrentUser, signOut, getDashboardPath, type AuthUser } from '@/lib/auth'
 import { useRouter } from 'next/navigation'
 import LanguageSwitcher from './LanguageSwitcher'
 
+interface UserProfile {
+  id: string
+  email: string
+  full_name: string
+  role: 'customer' | 'barber' | 'admin'
+}
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [user, setUser] = useState<AuthUser | null>(null)
+  const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -27,15 +34,30 @@ export default function Navbar() {
 
   const loadUser = async () => {
     setLoading(true)
-    const currentUser = await getCurrentUser()
-    setUser(currentUser)
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    
+    if (authUser) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, role')
+        .eq('id', authUser.id)
+        .single()
+      
+      setUser(profile)
+    } else {
+      setUser(null)
+    }
     setLoading(false)
   }
 
   const handleLogout = async () => {
-    await signOut()
+    await supabase.auth.signOut()
     setUser(null)
     router.push('/')
+  }
+
+  const getDashboardPath = (role: string) => {
+    return role === 'admin' ? '/admin' : role === 'barber' ? '/barber' : '/dashboard'
   }
 
   return (
@@ -50,18 +72,30 @@ export default function Navbar() {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <Link href="/services" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
-                Services
-              </Link>
-              <Link href="/barbers" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
-                Barbers
-              </Link>
-              <Link href="#about" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
-                About
-              </Link>
-              <Link href="#contact" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
-                Contact
-              </Link>
+              {/* Show public pages for guests and customers */}
+              {(!user || user.role === 'customer') && (
+                <>
+                  <Link href="/services" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                    Services
+                  </Link>
+                  <Link href="/barbers" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                    Barbers
+                  </Link>
+                  <Link href="/about" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                    About
+                  </Link>
+                  <Link href="/contact" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                    Contact
+                  </Link>
+                </>
+              )}
+              
+              {/* Customer-specific links */}
+              {user && user.role === 'customer' && (
+                <Link href="/dashboard" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                  My Bookings
+                </Link>
+              )}
             </div>
           </div>
 
@@ -70,32 +104,92 @@ export default function Navbar() {
             <LanguageSwitcher />
             {!loading && (
               user ? (
-                <>
-                  <Link 
-                    href={getDashboardPath(user.role)} 
-                    className="text-sm font-medium hover:text-gold transition-colors"
+                <div className="relative">
+                  <button
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex items-center space-x-2 text-sm font-medium hover:text-gold transition-colors"
                   >
-                    Dashboard
-                  </Link>
-                  <button 
-                    onClick={handleLogout}
-                    className="text-sm font-medium hover:text-gold transition-colors"
-                  >
-                    Logout
+                    <span>{user.full_name || user.email}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </button>
-                </>
+                  
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-charcoal border border-slate rounded-lg shadow-lg py-1">
+                      {user.role === 'customer' && (
+                        <>
+                          <Link href="/dashboard" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Dashboard
+                          </Link>
+                          <Link href="/dashboard/profile" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Profile
+                          </Link>
+                        </>
+                      )}
+                      
+                      {user.role === 'barber' && (
+                        <>
+                          <Link href="/barber" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Today
+                          </Link>
+                          <Link href="/barber/appointments" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Appointments
+                          </Link>
+                          <Link href="/barber/schedule" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Schedule
+                          </Link>
+                          <Link href="/barber/profile" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Profile
+                          </Link>
+                        </>
+                      )}
+                      
+                      {user.role === 'admin' && (
+                        <>
+                          <Link href="/admin" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Dashboard
+                          </Link>
+                          <Link href="/admin/services" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Services
+                          </Link>
+                          <Link href="/admin/barbers" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Barbers
+                          </Link>
+                          <Link href="/admin/customers" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Customers
+                          </Link>
+                          <Link href="/admin/settings" className="block px-4 py-2 text-sm hover:bg-slate hover:text-gold" onClick={() => setUserDropdownOpen(false)}>
+                            Settings
+                          </Link>
+                        </>
+                      )}
+                      
+                      <div className="border-t border-slate my-1"></div>
+                      <button 
+                        onClick={() => { handleLogout(); setUserDropdownOpen(false); }}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-slate hover:text-gold"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <Link href="/login" className="text-sm font-medium hover:text-gold transition-colors">
                   Login
                 </Link>
               )
             )}
-            <Link 
-              href="/booking" 
-              className="bg-gold hover:bg-gold-hover text-obsidian px-6 py-2.5 rounded-lg text-sm font-medium uppercase tracking-wider transition-transform hover:scale-105"
-            >
-              Book Now
-            </Link>
+            {/* Book Now button - only show for guests and customers */}
+            {(!user || user.role === 'customer') && (
+              <Link 
+                href="/booking" 
+                className="bg-gold hover:bg-gold-hover text-obsidian px-6 py-2.5 rounded-lg text-sm font-medium uppercase tracking-wider transition-transform hover:scale-105"
+              >
+                Book Now
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -120,22 +214,75 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-charcoal border-b border-slate">
           <div className="px-4 pt-2 pb-6 space-y-2">
-            <Link href="/services" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
-              Services
-            </Link>
-            <Link href="/barbers" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
-              Barbers
-            </Link>
+            {/* Show public pages for guests and customers */}
+            {(!user || user.role === 'customer') && (
+              <>
+                <Link href="/services" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                  Services
+                </Link>
+                <Link href="/barbers" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                  Barbers
+                </Link>
+                <Link href="/about" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                  About
+                </Link>
+                <Link href="/contact" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                  Contact
+                </Link>
+              </>
+            )}
+            
             {!loading && (
               user ? (
                 <>
-                  <Link 
-                    href={getDashboardPath(user.role)} 
-                    className="block px-3 py-3 text-base font-medium hover:text-gold" 
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
+                  {user.role === 'customer' && (
+                    <>
+                      <Link href="/dashboard" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        My Bookings
+                      </Link>
+                      <Link href="/dashboard/profile" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Profile
+                      </Link>
+                    </>
+                  )}
+                  
+                  {user.role === 'barber' && (
+                    <>
+                      <Link href="/barber" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Today
+                      </Link>
+                      <Link href="/barber/appointments" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Appointments
+                      </Link>
+                      <Link href="/barber/schedule" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Schedule
+                      </Link>
+                      <Link href="/barber/profile" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Profile
+                      </Link>
+                    </>
+                  )}
+                  
+                  {user.role === 'admin' && (
+                    <>
+                      <Link href="/admin" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Dashboard
+                      </Link>
+                      <Link href="/admin/services" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Services
+                      </Link>
+                      <Link href="/admin/barbers" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Barbers
+                      </Link>
+                      <Link href="/admin/customers" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Customers
+                      </Link>
+                      <Link href="/admin/settings" className="block px-3 py-3 text-base font-medium hover:text-gold" onClick={() => setMobileMenuOpen(false)}>
+                        Settings
+                      </Link>
+                    </>
+                  )}
+                  
                   <button 
                     onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
                     className="block w-full text-left px-3 py-3 text-base font-medium hover:text-gold"
@@ -149,13 +296,17 @@ export default function Navbar() {
                 </Link>
               )
             )}
-            <Link 
-              href="/booking" 
-              className="block w-full mt-4 bg-gold text-obsidian py-3 rounded-lg font-medium uppercase text-center"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Book Now
-            </Link>
+            
+            {/* Book Now button - only show for guests and customers */}
+            {(!user || user.role === 'customer') && (
+              <Link 
+                href="/booking" 
+                className="block w-full mt-4 bg-gold text-obsidian py-3 rounded-lg font-medium uppercase text-center"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Book Now
+              </Link>
+            )}
           </div>
         </div>
       )}

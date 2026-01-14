@@ -2,9 +2,9 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { signIn, getCurrentUser, getDashboardPath } from '@/lib/auth'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,18 +21,43 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      await signIn(email, password)
-      
-      // Get user role and redirect accordingly
-      const user = await getCurrentUser()
-      if (user) {
-        const dashboardPath = getDashboardPath(user.role)
-        router.push(dashboardPath)
-      } else {
-        router.push('/dashboard')
+      // Normalize email to lowercase
+      const normalizedEmail = email.toLowerCase().trim()
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      })
+
+      if (signInError) {
+        setError(signInError.message)
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Get user profile to determine role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        const role = profile?.role || 'customer'
+        
+        // Check for redirect parameter
+        const redirectTo = searchParams.get('redirect')
+        
+        if (redirectTo && redirectTo.startsWith('/')) {
+          router.push(redirectTo)
+        } else {
+          // Role-based redirect
+          const dashboardPath = role === 'admin' ? '/admin' : role === 'barber' ? '/barber' : '/dashboard'
+          router.push(dashboardPath)
+        }
       }
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message || 'An error occurred during login')
       setLoading(false)
     }
   }

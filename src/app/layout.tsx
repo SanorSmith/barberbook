@@ -3,6 +3,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SessionManager from "@/components/SessionManager";
+import AccessDeniedAlert from "@/components/AccessDeniedAlert";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,6 +31,8 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-obsidian text-cream selection:bg-gold selection:text-obsidian`}
       >
+        <SessionManager />
+        <AccessDeniedAlert />
         <Navbar />
         <main className="min-h-screen pt-20">
           {children}

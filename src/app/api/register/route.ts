@@ -12,6 +12,9 @@ export async function POST(request: Request) {
       )
     }
 
+    // Normalize email to lowercase to prevent case-sensitive duplicates
+    const normalizedEmail = email.toLowerCase().trim()
+
     // Check environment variables
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.error('Missing environment variables:', {
@@ -36,9 +39,49 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Create auth user
+    // Check if email already exists in profiles table
+    const { data: existingProfile, error: profileCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle()
+
+    if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing profile:', profileCheckError)
+      return NextResponse.json(
+        { error: 'Error checking email availability' },
+        { status: 500 }
+      )
+    }
+
+    if (existingProfile) {
+      return NextResponse.json(
+        { error: 'This email is already registered. Please login instead.' },
+        { status: 400 }
+      )
+    }
+
+    // Check if email exists in Supabase auth using service role
+    const { data: authUsers, error: authCheckError } = await serviceRoleSupabase.auth.admin.listUsers()
+    
+    if (authCheckError) {
+      console.error('Error checking existing auth users:', authCheckError)
+    } else if (authUsers?.users) {
+      const emailExists = authUsers.users.some(
+        user => user.email?.toLowerCase() === normalizedEmail
+      )
+      
+      if (emailExists) {
+        return NextResponse.json(
+          { error: 'This email is already registered. Please login instead.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Create auth user with normalized email
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         data: {
@@ -48,6 +91,13 @@ export async function POST(request: Request) {
     })
 
     if (authError) {
+      // Handle specific Supabase auth errors
+      if (authError.message.includes('already registered')) {
+        return NextResponse.json(
+          { error: 'This email is already registered. Please login instead.' },
+          { status: 400 }
+        )
+      }
       return NextResponse.json(
         { error: authError.message },
         { status: 400 }
