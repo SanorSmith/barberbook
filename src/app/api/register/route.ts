@@ -39,8 +39,9 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Check if email already exists in profiles table
-    const { data: existingProfile, error: profileCheckError } = await supabase
+    // Check if email already exists in profiles table using service role
+    // Use service role to bypass RLS policies
+    const { data: existingProfile, error: profileCheckError } = await serviceRoleSupabase
       .from('profiles')
       .select('id')
       .eq('email', normalizedEmail)
@@ -48,10 +49,8 @@ export async function POST(request: Request) {
 
     if (profileCheckError && profileCheckError.code !== 'PGRST116') {
       console.error('Error checking existing profile:', profileCheckError)
-      return NextResponse.json(
-        { error: 'Error checking email availability' },
-        { status: 500 }
-      )
+      // Don't block registration if we can't check profiles
+      // The auth check below will catch duplicates
     }
 
     if (existingProfile) {
