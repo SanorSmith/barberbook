@@ -17,6 +17,9 @@ export default function AdminBarbersPage() {
     specialties: '',
     is_active: true
   })
+  const [uploading, setUploading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -33,15 +36,64 @@ export default function AdminBarbersPage() {
     setLoading(false)
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
+      const filePath = `barbers/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('barber-images')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        return null
+      }
+
+      const { data } = supabase.storage
+        .from('barber-images')
+        .getPublicUrl(filePath)
+
+      return data.publicUrl
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      return null
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setUploading(true)
+    
+    let imageUrl = formData.image_url
+
+    // Upload image if a new file was selected
+    if (imageFile) {
+      const uploadedUrl = await uploadImage(imageFile)
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl
+      }
+    }
     
     const barberData = {
       name: formData.name,
       role: formData.role,
       bio: formData.bio,
       experience: formData.experience,
-      image_url: formData.image_url || null,
+      image_url: imageUrl || null,
       specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : [],
       is_active: formData.is_active
     }
@@ -59,6 +111,8 @@ export default function AdminBarbersPage() {
 
     setShowModal(false)
     setEditingBarber(null)
+    setImageFile(null)
+    setImagePreview(null)
     setFormData({
       name: '',
       role: 'Senior Barber',
@@ -68,6 +122,7 @@ export default function AdminBarbersPage() {
       specialties: '',
       is_active: true
     })
+    setUploading(false)
     loadBarbers()
   }
 
@@ -82,6 +137,8 @@ export default function AdminBarbersPage() {
       specialties: Array.isArray(barber.specialties) ? barber.specialties.join(', ') : '',
       is_active: barber.is_active
     })
+    setImageFile(null)
+    setImagePreview(barber.image_url || null)
     setShowModal(true)
   }
 
@@ -120,6 +177,8 @@ export default function AdminBarbersPage() {
         <button
           onClick={() => {
             setEditingBarber(null)
+            setImageFile(null)
+            setImagePreview(null)
             setFormData({
               name: '',
               role: 'Senior Barber',
@@ -261,14 +320,40 @@ export default function AdminBarbersPage() {
               </div>
 
               <div>
-                <label className="block text-silver text-sm mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
-                  placeholder="https://example.com/image.jpg"
-                />
+                <label className="block text-silver text-sm mb-2">Barber Image</label>
+                
+                {/* Image Preview */}
+                {(imagePreview || formData.image_url) && (
+                  <div className="mb-4">
+                    <img
+                      src={imagePreview || formData.image_url}
+                      alt="Preview"
+                      className="w-32 h-32 rounded-full object-cover border-2 border-slate"
+                    />
+                  </div>
+                )}
+
+                {/* File Upload */}
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gold file:text-obsidian hover:file:bg-gold-hover"
+                  />
+                  <p className="text-silver text-xs">Upload a new image or use the URL below</p>
+                </div>
+
+                {/* URL Input (optional) */}
+                <div className="mt-3">
+                  <input
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                    placeholder="Or paste image URL here"
+                  />
+                </div>
               </div>
 
               <div>
@@ -302,9 +387,10 @@ export default function AdminBarbersPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-3 bg-gold hover:bg-gold-hover text-obsidian rounded-lg font-semibold transition-colors"
+                  disabled={uploading}
+                  className="flex-1 px-6 py-3 bg-gold hover:bg-gold-hover text-obsidian rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {editingBarber ? 'Update' : 'Create'}
+                  {uploading ? 'Uploading...' : editingBarber ? 'Update' : 'Create'}
                 </button>
               </div>
             </form>
