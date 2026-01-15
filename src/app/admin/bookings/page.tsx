@@ -10,17 +10,20 @@ interface Booking {
   status: string
   notes: string | null
   created_at: string
-  user: {
+  user_id: string
+  barber_id: number
+  service_id: number
+  profiles: {
     id: string
     full_name: string
     email: string
     phone: string | null
   } | null
-  barber: {
+  barbers: {
     id: number
     name: string
   } | null
-  service: {
+  services: {
     id: number
     name: string
     price: number
@@ -34,15 +37,60 @@ export default function AdminBookingsPage() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
+  const [customers, setCustomers] = useState<any[]>([])
+  const [barbers, setBarbers] = useState<any[]>([])
+  const [services, setServices] = useState<any[]>([])
+  const [formData, setFormData] = useState({
+    user_id: '',
+    barber_id: '',
+    service_id: '',
+    booking_date: '',
+    booking_time: '',
+    status: 'pending',
+    notes: ''
+  })
   const supabase = createClient()
 
   useEffect(() => {
     loadBookings()
+    loadCustomers()
+    loadBarbers()
+    loadServices()
   }, [filter])
+
+  const loadCustomers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .eq('role', 'customer')
+      .order('full_name')
+    setCustomers(data || [])
+  }
+
+  const loadBarbers = async () => {
+    const { data } = await supabase
+      .from('barbers')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name')
+    setBarbers(data || [])
+  }
+
+  const loadServices = async () => {
+    const { data } = await supabase
+      .from('services')
+      .select('id, name, price, duration')
+      .eq('is_active', true)
+      .order('name')
+    setServices(data || [])
+  }
 
   const loadBookings = async () => {
     setLoading(true)
+    console.log('Loading bookings...')
+    
     let query = supabase
       .from('bookings')
       .select(`
@@ -52,17 +100,20 @@ export default function AdminBookingsPage() {
         status,
         notes,
         created_at,
-        user:profiles!bookings_user_id_fkey (
+        user_id,
+        barber_id,
+        service_id,
+        profiles!user_id (
           id,
           full_name,
           email,
           phone
         ),
-        barber:barbers!bookings_barber_id_fkey (
+        barbers!barber_id (
           id,
           name
         ),
-        service:services!bookings_service_id_fkey (
+        services!service_id (
           id,
           name,
           price,
@@ -80,7 +131,11 @@ export default function AdminBookingsPage() {
 
     if (error) {
       console.error('Error loading bookings:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      alert(`Error loading bookings: ${error.message}`)
     } else {
+      console.log('Bookings loaded:', data)
+      console.log('Number of bookings:', data?.length || 0)
       setBookings((data as any) || [])
     }
     setLoading(false)
@@ -134,14 +189,56 @@ export default function AdminBookingsPage() {
     }
   }
 
+  const handleCreateBooking = async (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log('Creating booking with data:', formData)
+
+    const bookingData = {
+      user_id: formData.user_id,
+      barber_id: parseInt(formData.barber_id),
+      service_id: parseInt(formData.service_id),
+      booking_date: formData.booking_date,
+      booking_time: formData.booking_time,
+      status: formData.status,
+      notes: formData.notes || null
+    }
+
+    console.log('Inserting booking:', bookingData)
+
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert(bookingData)
+      .select()
+
+    if (error) {
+      console.error('Error creating booking:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      alert(`Failed to create booking: ${error.message}`)
+    } else {
+      console.log('Booking created successfully:', data)
+      alert('Booking created successfully!')
+      setShowCreateModal(false)
+      setFormData({
+        user_id: '',
+        barber_id: '',
+        service_id: '',
+        booking_date: '',
+        booking_time: '',
+        status: 'pending',
+        notes: ''
+      })
+      loadBookings()
+    }
+  }
+
   const filteredBookings = bookings.filter(booking => {
     if (!searchTerm) return true
     const search = searchTerm.toLowerCase()
     return (
-      booking.user?.full_name?.toLowerCase().includes(search) ||
-      booking.user?.email?.toLowerCase().includes(search) ||
-      booking.barber?.name?.toLowerCase().includes(search) ||
-      booking.service?.name?.toLowerCase().includes(search)
+      booking.profiles?.full_name?.toLowerCase().includes(search) ||
+      booking.profiles?.email?.toLowerCase().includes(search) ||
+      booking.barbers?.name?.toLowerCase().includes(search) ||
+      booking.services?.name?.toLowerCase().includes(search)
     )
   })
 
@@ -167,9 +264,17 @@ export default function AdminBookingsPage() {
     <div className="min-h-screen bg-obsidian text-cream p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-serif text-gold mb-2">Bookings Management</h1>
-          <p className="text-silver">Manage all customer bookings and appointments</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-serif text-gold mb-2">Bookings Management</h1>
+            <p className="text-silver">Manage all customer bookings and appointments</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-6 py-3 bg-gold hover:bg-gold-hover text-obsidian rounded-lg font-semibold transition-colors"
+          >
+            + Create Booking
+          </button>
         </div>
 
         {/* Stats */}
@@ -256,17 +361,21 @@ export default function AdminBookingsPage() {
                         <div className="text-sm text-silver">{booking.booking_time}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-cream">{booking.user?.full_name || 'N/A'}</div>
-                        <div className="text-sm text-silver">{booking.user?.email || 'N/A'}</div>
-                        {booking.user?.phone && (
-                          <div className="text-xs text-silver">{booking.user.phone}</div>
-                        )}
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center text-gold font-semibold">
+                            {booking.profiles?.full_name?.charAt(0) || '?'}
+                          </div>
+                          <div>
+                            <div className="text-cream font-medium">{booking.profiles?.full_name || 'N/A'}</div>
+                            <div className="text-silver text-sm">{booking.profiles?.email}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-cream">{booking.barber?.name || 'N/A'}</td>
+                      <td className="px-6 py-4 text-silver">{booking.barbers?.name || 'N/A'}</td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-cream">{booking.service?.name || 'N/A'}</div>
-                        <div className="text-sm text-silver">
-                          ${booking.service?.price} • {booking.service?.duration}min
+                        <div className="text-cream">{booking.services?.name || 'N/A'}</div>
+                        <div className="text-silver text-sm">
+                          €{booking.services?.price} • {booking.services?.duration}min
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -342,6 +451,131 @@ export default function AdminBookingsPage() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Create Booking Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-charcoal border border-slate rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-serif text-gold mb-4">Create New Booking</h3>
+              <form onSubmit={handleCreateBooking} className="space-y-4">
+                <div>
+                  <label className="block text-silver text-sm mb-2">Customer</label>
+                  <select
+                    value={formData.user_id}
+                    onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                    required
+                  >
+                    <option value="">Select customer</option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.full_name} ({customer.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-silver text-sm mb-2">Barber</label>
+                  <select
+                    value={formData.barber_id}
+                    onChange={(e) => setFormData({ ...formData, barber_id: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                    required
+                  >
+                    <option value="">Select barber</option>
+                    {barbers.map((barber) => (
+                      <option key={barber.id} value={barber.id}>
+                        {barber.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-silver text-sm mb-2">Service</label>
+                  <select
+                    value={formData.service_id}
+                    onChange={(e) => setFormData({ ...formData, service_id: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                    required
+                  >
+                    <option value="">Select service</option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.id}>
+                        {service.name} - €{service.price} ({service.duration}min)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-silver text-sm mb-2">Date</label>
+                    <input
+                      type="date"
+                      value={formData.booking_date}
+                      onChange={(e) => setFormData({ ...formData, booking_date: e.target.value })}
+                      className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-silver text-sm mb-2">Time</label>
+                    <input
+                      type="time"
+                      value={formData.booking_time}
+                      onChange={(e) => setFormData({ ...formData, booking_time: e.target.value })}
+                      className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-silver text-sm mb-2">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-silver text-sm mb-2">Notes (optional)</label>
+                  <textarea
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg p-3 text-cream focus:border-gold outline-none min-h-[100px]"
+                    placeholder="Add any notes about this booking..."
+                  />
+                </div>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 bg-slate/30 hover:bg-slate/50 text-cream py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-gold hover:bg-gold-hover text-obsidian py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Create Booking
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
