@@ -25,33 +25,70 @@ export interface CreateBookingData {
 export async function createBooking(data: CreateBookingData): Promise<Booking> {
   const supabase = createClient()
   
+  console.log('[createBooking] Starting booking creation...')
+  
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User not authenticated')
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError) {
+    console.error('[createBooking] Auth error:', authError)
+    throw new Error('Authentication failed. Please log in and try again.')
+  }
+  if (!user) {
+    console.error('[createBooking] No user found')
+    throw new Error('You must be logged in to create a booking.')
+  }
+  
+  console.log('[createBooking] User authenticated:', user.id)
 
   // Get service price
-  const { data: service } = await supabase
+  const { data: service, error: serviceError } = await supabase
     .from('services')
     .select('price')
     .eq('id', data.service_id)
     .single()
 
+  if (serviceError) {
+    console.error('[createBooking] Service lookup error:', serviceError)
+    throw new Error('Failed to find service details. Please try again.')
+  }
+
+  console.log('[createBooking] Service found, price:', service?.price)
+
+  const bookingData = {
+    user_id: user.id,
+    barber_id: data.barber_id,
+    service_id: data.service_id,
+    booking_date: data.booking_date,
+    booking_time: data.booking_time,
+    status: 'confirmed' as const,
+    notes: data.notes || null,
+    total_price: service?.price || 0
+  }
+
+  console.log('[createBooking] Inserting booking:', bookingData)
+
   const { data: booking, error } = await supabase
     .from('bookings')
-    .insert({
-      user_id: user.id,
-      barber_id: data.barber_id,
-      service_id: data.service_id,
-      booking_date: data.booking_date,
-      booking_time: data.booking_time,
-      status: 'confirmed',
-      notes: data.notes || null,
-      total_price: service?.price || 0
-    })
+    .insert(bookingData)
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error('[createBooking] Insert error:', error)
+    
+    // Provide user-friendly error messages
+    if (error.code === '23505') {
+      throw new Error('This time slot is already booked. Please choose another time.')
+    } else if (error.code === '23503') {
+      throw new Error('Invalid booking details. Please refresh and try again.')
+    } else if (error.message.includes('row-level security')) {
+      throw new Error('Permission denied. Please log in and try again.')
+    } else {
+      throw new Error(`Failed to create booking: ${error.message}`)
+    }
+  }
+
+  console.log('[createBooking] Booking created successfully:', booking.id)
   return booking
 }
 

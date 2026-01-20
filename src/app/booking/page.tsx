@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { getAllServices, type Service } from '@/lib/services'
 import { getAllBarbers, type Barber } from '@/lib/barbers'
 import { getAvailableSlots, type TimeSlot } from '@/lib/availability'
@@ -19,13 +20,39 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [notes, setNotes] = useState('')
   
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
+  const supabase = createClient()
 
   useEffect(() => {
-    loadServices()
+    checkAuth()
   }, [])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadServices()
+    }
+  }, [isAuthenticated])
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        // Redirect to login with return URL
+        router.push(`/login?redirect=/booking`)
+        return
+      }
+      
+      setIsAuthenticated(true)
+      setLoading(false)
+    } catch (err) {
+      console.error('Auth check failed:', err)
+      router.push(`/login?redirect=/booking`)
+    }
+  }
 
   useEffect(() => {
     if (step === 2) {
@@ -42,6 +69,7 @@ export default function BookingPage() {
 
   const loadServices = async () => {
     try {
+      setLoading(true)
       const data = await getAllServices()
       console.log('Loaded services for booking:', data)
       setServices(data)
@@ -51,6 +79,8 @@ export default function BookingPage() {
     } catch (err) {
       console.error('Failed to load services:', err)
       setError('Failed to load services. Please refresh the page.')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -102,7 +132,7 @@ export default function BookingPage() {
     setError(null)
 
     try {
-      await createBooking({
+      console.log('Creating booking with data:', {
         service_id: selectedService.id,
         barber_id: selectedBarber.id,
         booking_date: selectedDate,
@@ -110,9 +140,19 @@ export default function BookingPage() {
         notes: notes || undefined
       })
 
+      const booking = await createBooking({
+        service_id: selectedService.id,
+        barber_id: selectedBarber.id,
+        booking_date: selectedDate,
+        booking_time: selectedTime,
+        notes: notes || undefined
+      })
+
+      console.log('Booking created successfully:', booking)
       router.push('/booking/success')
     } catch (err: any) {
-      setError(err.message || 'Failed to create booking')
+      console.error('Booking creation failed:', err)
+      setError(err.message || 'Failed to create booking. Please try again or contact support.')
       setLoading(false)
     }
   }
@@ -126,6 +166,23 @@ export default function BookingPage() {
       dates.push(date)
     }
     return dates
+  }
+
+  // Show loading screen while checking authentication
+  if (loading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-cream">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render booking form if not authenticated
+  if (!isAuthenticated) {
+    return null
   }
 
   return (
