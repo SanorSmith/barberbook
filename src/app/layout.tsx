@@ -19,6 +19,26 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "BarberBook - Premium Grooming",
   description: "Premium grooming experience for the modern gentleman",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "BarberBook",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: "BarberBook",
+    title: "BarberBook - Premium Grooming",
+    description: "Premium grooming experience for the modern gentleman",
+  },
+  twitter: {
+    card: "summary",
+    title: "BarberBook - Premium Grooming",
+    description: "Premium grooming experience for the modern gentleman",
+  },
 };
 
 export default function RootLayout({
