@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getAllServices, type Service } from '@/lib/services'
 import { getAllBarbers, type Barber } from '@/lib/barbers'
@@ -24,6 +24,7 @@ export default function BookingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
@@ -33,8 +34,35 @@ export default function BookingPage() {
   useEffect(() => {
     if (isAuthenticated) {
       loadServices()
+      loadBarbers()
+      
+      // Check if barber ID is in query params
+      const barberId = searchParams.get('barber')
+      if (barberId) {
+        console.log('[Booking] Pre-selected barber ID from URL:', barberId)
+        // Will be set after barbers are loaded
+      }
     }
   }, [isAuthenticated])
+
+  useEffect(() => {
+    // Auto-select barber if provided in URL
+    const barberId = searchParams.get('barber')
+    if (barberId && barbers.length > 0 && !selectedBarber) {
+      const barber = barbers.find(b => b.id === parseInt(barberId))
+      if (barber) {
+        console.log('[Booking] Auto-selecting barber:', barber.name)
+        setSelectedBarber(barber)
+        // If we're on step 1 and have a service selected, skip to step 3
+        if (selectedService && step === 1) {
+          setStep(3)
+        } else if (step === 1) {
+          // If no service selected yet, stay on step 1
+          // User will select service then auto-advance to date/time
+        }
+      }
+    }
+  }, [barbers, searchParams])
 
   const checkAuth = async () => {
     try {
@@ -233,7 +261,12 @@ export default function BookingPage() {
                   key={service.id}
                   onClick={() => {
                     setSelectedService(service)
-                    setStep(2)
+                    // If barber is pre-selected, skip to step 3
+                    if (selectedBarber) {
+                      setStep(3)
+                    } else {
+                      setStep(2)
+                    }
                   }}
                   className="bg-charcoal border border-slate hover:border-gold rounded-lg p-6 text-left transition-colors"
                 >

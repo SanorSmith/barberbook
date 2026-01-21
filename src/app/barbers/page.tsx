@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 export default function BarbersPage() {
   const [barbers, setBarbers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -15,14 +16,29 @@ export default function BarbersPage() {
   }, [])
 
   const loadBarbers = async () => {
-    const { data } = await supabase
-      .from('barbers')
-      .select('*')
-      .eq('is_active', true)
-      .order('rating', { ascending: false })
+    try {
+      console.log('[Barbers Page] Loading barbers...')
+      const { data, error } = await supabase
+        .from('barbers')
+        .select('*')
+        .eq('is_active', true)
+        .order('rating', { ascending: false })
 
-    setBarbers(data || [])
-    setLoading(false)
+      if (error) {
+        console.error('[Barbers Page] Error loading barbers:', error)
+        setError('Failed to load barbers. Please try again.')
+        setLoading(false)
+        return
+      }
+
+      console.log('[Barbers Page] Loaded barbers:', data?.length || 0)
+      setBarbers(data || [])
+      setLoading(false)
+    } catch (err) {
+      console.error('[Barbers Page] Unexpected error:', err)
+      setError('An unexpected error occurred.')
+      setLoading(false)
+    }
   }
   return (
     <>
@@ -46,21 +62,38 @@ export default function BarbersPage() {
           </select>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
+            {error}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : barbers.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-silver text-lg">No barbers available at the moment.</p>
+            <p className="text-silver/70 text-sm mt-2">Please check back later.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {barbers.map((barber) => (
             <div key={barber.id} className="bg-charcoal border border-slate rounded-2xl overflow-hidden group">
               <div className="h-80 overflow-hidden relative">
-                <Image
-                  src={barber.image}
-                  alt={barber.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+                {barber.image_url ? (
+                  <Image
+                    src={barber.image_url}
+                    alt={barber.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate flex items-center justify-center">
+                    <span className="text-6xl text-silver">{barber.name.charAt(0)}</span>
+                  </div>
+                )}
                 <div className="absolute bottom-4 right-4 bg-black/80 px-3 py-1 rounded-full flex items-center text-gold text-sm font-semibold backdrop-blur-sm">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -95,7 +128,7 @@ export default function BarbersPage() {
                     Profile
                   </Link>
                   <Link 
-                    href="/booking"
+                    href={`/booking?barber=${barber.id}`}
                     className="bg-gold hover:bg-gold-hover text-obsidian py-2 rounded-lg text-sm font-medium transition-colors text-center"
                   >
                     Book Now
