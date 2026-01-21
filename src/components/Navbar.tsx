@@ -117,8 +117,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <span className="font-serif text-2xl font-semibold tracking-tight text-gold inline-flex" style={{ perspective: '1000px' }}>
+          <Link href="/" className="flex-shrink-0 flex items-center">
+            <span className="font-serif text-2xl font-semibold tracking-tight text-gold inline-flex items-center" style={{ perspective: '1000px' }}>
               {'BARBERBOOK'.split('').map((char, index) => (
                 <span
                   key={index}
