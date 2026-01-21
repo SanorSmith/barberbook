@@ -112,7 +112,8 @@ export async function POST(request: Request) {
     
     // Update profile (trigger already created it, so we update with additional fields)
     // Using upsert to handle both cases: if trigger created it or if it doesn't exist
-    const { error: profileError } = await supabase
+    // Use adminClient to bypass RLS policies
+    const { error: profileError } = await adminClient
       .from('profiles')
       .upsert({
         id: userId,
@@ -137,8 +138,8 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
     
-    // Create barber record
-    const { data: barberData, error: barberError } = await supabase
+    // Create barber record - use adminClient to bypass RLS
+    const { data: barberData, error: barberError } = await adminClient
       .from('barbers')
       .insert({
         user_id: userId,
@@ -155,8 +156,8 @@ export async function POST(request: Request) {
     
     if (barberError) {
       console.error('Barber creation error:', barberError)
-      // Cleanup: delete profile and auth user
-      await supabase.from('profiles').delete().eq('id', userId)
+      // Cleanup: delete profile and auth user - use adminClient
+      await adminClient.from('profiles').delete().eq('id', userId)
       await adminClient.auth.admin.deleteUser(userId)
       return NextResponse.json({ 
         error: `Failed to create barber record: ${barberError.message}` 
@@ -177,7 +178,7 @@ export async function POST(request: Request) {
       barber_id: barberData.id
     }))
     
-    const { error: hoursError } = await supabase
+    const { error: hoursError } = await adminClient
       .from('working_hours')
       .insert(workingHoursData)
     
