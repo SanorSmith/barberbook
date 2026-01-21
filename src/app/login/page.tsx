@@ -21,6 +21,9 @@ function LoginForm() {
     setError(null)
 
     try {
+      console.log('[Login] Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log('[Login] Has anon key:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+      
       const emailToUse = email.toLowerCase().trim()
 
       // Validate email format
@@ -30,13 +33,18 @@ function LoginForm() {
         return
       }
 
+      console.log('[Login] Attempting sign in with:', emailToUse)
+      
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: emailToUse,
         password,
       })
 
+      console.log('[Login] Sign in response:', { data, error: signInError })
+
       if (signInError) {
-        setError(signInError.message)
+        console.error('[Login] Sign in error:', signInError)
+        setError(signInError.message || 'Login failed. Please check your credentials.')
         setLoading(false)
         return
       }
@@ -78,7 +86,13 @@ function LoginForm() {
         console.log('=== END LOGIN DEBUG ===')
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred during login')
+      console.error('[Login] Catch block error:', err)
+      console.error('[Login] Error details:', {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      })
+      setError(err.message || 'Network error. Please check your connection and try again.')
       setLoading(false)
     }
   }
