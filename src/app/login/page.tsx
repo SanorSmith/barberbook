@@ -53,25 +53,40 @@ function LoginForm() {
       }
 
       if (data.user) {
+        console.log('=== LOGIN DEBUG ===')
+        console.log('User ID:', data.user.id)
+        console.log('User Email:', data.user.email)
+        
         // Get user profile to determine role
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
           .single()
 
+        console.log('Profile query error:', profileError)
+        console.log('Profile data:', profile)
+        console.log('Role from profile:', profile?.role)
+
         const role = profile?.role || 'customer'
+        console.log('Final role (with fallback):', role)
         
         // Check for redirect parameter
         const redirectTo = searchParams.get('redirect')
+        console.log('Redirect parameter:', redirectTo)
         
         if (redirectTo && redirectTo.startsWith('/')) {
+          console.log('Using redirect parameter, going to:', redirectTo)
           router.push(redirectTo)
         } else {
           // Role-based redirect
           const dashboardPath = role === 'admin' ? '/admin' : role === 'barber' ? '/barber' : '/dashboard'
+          console.log('Role-based redirect, going to:', dashboardPath)
+          console.log('Role check: role === "admin"?', role === 'admin')
+          console.log('Role check: role === "barber"?', role === 'barber')
           router.push(dashboardPath)
         }
+        console.log('=== END LOGIN DEBUG ===')
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred during login')
