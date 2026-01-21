@@ -33,21 +33,44 @@ export default function AdminBarbersPage() {
   }, [])
 
   const loadBarbers = async () => {
-    const { data, error } = await supabase
+    // Load barbers without join first
+    const { data: barbersData, error: barbersError } = await supabase
       .from('barbers')
-      .select(`
-        *,
-        profiles!barbers_user_id_fkey(username)
-      `)
+      .select('*')
       .order('name', { ascending: true })
 
-    if (error) {
-      console.error('Error loading barbers:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
+    if (barbersError) {
+      console.error('Error loading barbers:', barbersError)
+      setBarbers([])
+      setLoading(false)
+      return
+    }
+
+    // Load profiles separately and merge
+    if (barbersData && barbersData.length > 0) {
+      const userIds = barbersData.map(b => b.user_id).filter(Boolean)
+      
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('id', userIds)
+
+        // Merge profiles data with barbers
+        const barbersWithProfiles = barbersData.map(barber => ({
+          ...barber,
+          profiles: profilesData?.find(p => p.id === barber.user_id) || null
+        }))
+        
+        console.log('Barbers with profiles:', barbersWithProfiles)
+        setBarbers(barbersWithProfiles)
+      } else {
+        setBarbers(barbersData)
+      }
+    } else {
+      setBarbers([])
     }
     
-    console.log('Barbers data:', data)
-    setBarbers(data || [])
     setLoading(false)
   }
 
