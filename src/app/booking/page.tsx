@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { getAllServices, type Service } from '@/lib/services'
@@ -8,7 +8,7 @@ import { getAllBarbers, type Barber } from '@/lib/barbers'
 import { getAvailableSlots, type TimeSlot } from '@/lib/availability'
 import { createBooking } from '@/lib/bookings'
 
-export default function BookingPage() {
+function BookingPageContent() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [services, setServices] = useState<Service[]>([])
   const [barbers, setBarbers] = useState<Barber[]>([])
@@ -517,5 +517,13 @@ export default function BookingPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={<div>Loading booking...</div>}>
+      <BookingPageContent />
+    </Suspense>
   )
 }
