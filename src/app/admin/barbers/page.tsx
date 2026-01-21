@@ -53,7 +53,7 @@ export default function AdminBarbersPage() {
       if (userIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, username')
+          .select('id, username, email, phone, full_name')
           .in('id', userIds)
 
         // Merge profiles data with barbers
@@ -140,10 +140,32 @@ export default function AdminBarbersPage() {
           is_active: formData.is_active
         }
 
-        await supabase
+        // Update barber record
+        const { error: barberError } = await supabase
           .from('barbers')
           .update(barberData)
           .eq('id', editingBarber.id)
+
+        if (barberError) {
+          throw new Error(`Failed to update barber: ${barberError.message}`)
+        }
+
+        // Update profile (email, phone, full_name)
+        if (editingBarber.user_id) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: `${formData.firstName} ${formData.lastName}`,
+              email: formData.email,
+              phone: formData.phone || null
+            })
+            .eq('id', editingBarber.user_id)
+
+          if (profileError) {
+            console.error('Profile update error:', profileError)
+            // Don't fail the entire operation, just log the error
+          }
+        }
       } else {
         // Create new barber with auto-generated credentials
         const response = await fetch('/api/admin/create-barber', {
@@ -206,8 +228,8 @@ export default function AdminBarbersPage() {
     setFormData({
       firstName: firstName || '',
       lastName: lastName || '',
-      email: barber.email || '',
-      phone: barber.phone || '',
+      email: barber.profiles?.email || '',
+      phone: barber.profiles?.phone || '',
       role: barber.role || 'Senior Barber',
       bio: barber.bio || '',
       yearsExperience: barber.years_experience?.toString() || '',
@@ -366,51 +388,49 @@ export default function AdminBarbersPage() {
                 </div>
               )}
 
-              {/* First Name and Last Name - Only for new barbers */}
-              {!editingBarber && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-silver text-sm mb-2">
-                      First Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-silver text-sm mb-2">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Email - Only for new barbers */}
-              {!editingBarber && (
+              {/* First Name and Last Name */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-silver text-sm mb-2">
-                    Email <span className="text-red-500">*</span>
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
                     required
                   />
                 </div>
-              )}
+                <div>
+                  <label className="block text-silver text-sm mb-2">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-silver text-sm mb-2">
+                  Email <span className="text-red-500">*</span>
+                  {editingBarber && <span className="text-xs text-slate ml-2">(Cannot be changed for existing barbers)</span>}
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                  required
+                  disabled={!!editingBarber}
+                />
+              </div>
 
               {/* Phone */}
               <div>
