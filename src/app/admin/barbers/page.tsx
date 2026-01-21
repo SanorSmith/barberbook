@@ -37,7 +37,7 @@ export default function AdminBarbersPage() {
       .from('barbers')
       .select(`
         *,
-        profiles!inner(username)
+        profiles(username)
       `)
       .order('name', { ascending: true })
 
