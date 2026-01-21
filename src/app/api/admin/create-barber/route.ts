@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 // Generate username from first and last name
@@ -86,8 +87,11 @@ export async function POST(request: Request) {
     const password = generatePassword(firstName)
     const fullName = `${firstName} ${lastName}`
     
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Create admin client for user creation (requires service role)
+    const adminClient = createAdminClient()
+    
+    // Create user in Supabase Auth using admin client
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: email,
       password: password,
       email_confirm: true, // Skip email verification
@@ -124,7 +128,7 @@ export async function POST(request: Request) {
     if (profileError) {
       console.error('Profile creation error:', profileError)
       // Cleanup: delete auth user if profile creation fails
-      await supabase.auth.admin.deleteUser(userId)
+      await adminClient.auth.admin.deleteUser(userId)
       return NextResponse.json({ 
         error: `Failed to create profile: ${profileError.message}` 
       }, { status: 500 })
@@ -154,7 +158,7 @@ export async function POST(request: Request) {
       console.error('Barber creation error:', barberError)
       // Cleanup: delete profile and auth user
       await supabase.from('profiles').delete().eq('id', userId)
-      await supabase.auth.admin.deleteUser(userId)
+      await adminClient.auth.admin.deleteUser(userId)
       return NextResponse.json({ 
         error: `Failed to create barber record: ${barberError.message}` 
       }, { status: 500 })
