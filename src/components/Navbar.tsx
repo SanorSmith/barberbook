@@ -200,9 +200,9 @@ export default function Navbar() {
               
               {/* Sliding Indicator */}
               <div
-                className="absolute bottom-0 h-0.5 bg-gold transition-all duration-300 ease-out"
+                className="absolute bottom-0 left-0 h-0.5 bg-gold transition-all duration-300 ease-out pointer-events-none"
                 style={{
-                  left: `${indicatorStyle.left}px`,
+                  transform: `translateX(${indicatorStyle.left}px)`,
                   width: `${indicatorStyle.width}px`,
                   opacity: indicatorStyle.opacity
                 }}
