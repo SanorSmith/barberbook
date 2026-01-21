@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import BarberCredentialsModal from '@/components/admin/BarberCredentialsModal'
 
 export default function AdminBarbersPage() {
   const [barbers, setBarbers] = useState<any[]>([])
@@ -9,10 +10,13 @@ export default function AdminBarbersPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingBarber, setEditingBarber] = useState<any>(null)
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     role: 'Senior Barber',
     bio: '',
-    experience: '',
+    yearsExperience: '',
     image_url: '',
     specialties: '',
     is_active: true
@@ -20,6 +24,8 @@ export default function AdminBarbersPage() {
   const [uploading, setUploading] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [credentials, setCredentials] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
@@ -77,53 +83,87 @@ export default function AdminBarbersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setUploading(true)
+    setError(null)
     
-    let imageUrl = formData.image_url
+    try {
+      let imageUrl = formData.image_url
 
-    // Upload image if a new file was selected
-    if (imageFile) {
-      const uploadedUrl = await uploadImage(imageFile)
-      if (uploadedUrl) {
-        imageUrl = uploadedUrl
+      // Upload image if a new file was selected
+      if (imageFile) {
+        const uploadedUrl = await uploadImage(imageFile)
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl
+        }
       }
-    }
-    
-    const barberData = {
-      name: formData.name,
-      role: formData.role,
-      bio: formData.bio,
-      experience: formData.experience,
-      image_url: imageUrl || null,
-      specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : [],
-      is_active: formData.is_active
-    }
 
-    if (editingBarber) {
-      await supabase
-        .from('barbers')
-        .update(barberData)
-        .eq('id', editingBarber.id)
-    } else {
-      await supabase
-        .from('barbers')
-        .insert(barberData)
-    }
+      if (editingBarber) {
+        // Update existing barber
+        const barberData = {
+          name: `${formData.firstName} ${formData.lastName}`,
+          role: formData.role,
+          bio: formData.bio,
+          years_experience: parseInt(formData.yearsExperience) || 0,
+          image_url: imageUrl || null,
+          specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : [],
+          is_active: formData.is_active
+        }
 
-    setShowModal(false)
-    setEditingBarber(null)
-    setImageFile(null)
-    setImagePreview(null)
-    setFormData({
-      name: '',
-      role: 'Senior Barber',
-      bio: '',
-      experience: '',
-      image_url: '',
-      specialties: '',
-      is_active: true
-    })
-    setUploading(false)
-    loadBarbers()
+        await supabase
+          .from('barbers')
+          .update(barberData)
+          .eq('id', editingBarber.id)
+      } else {
+        // Create new barber with auto-generated credentials
+        const response = await fetch('/api/admin/create-barber', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            bio: formData.bio,
+            specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : [],
+            yearsExperience: parseInt(formData.yearsExperience) || 0,
+            imageUrl: imageUrl || null
+          })
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to create barber')
+        }
+
+        // Show credentials modal
+        setCredentials(data.barber)
+      }
+
+      setShowModal(false)
+      setEditingBarber(null)
+      setImageFile(null)
+      setImagePreview(null)
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        role: 'Senior Barber',
+        bio: '',
+        yearsExperience: '',
+        image_url: '',
+        specialties: '',
+        is_active: true
+      })
+      setUploading(false)
+      loadBarbers()
+    } catch (error: any) {
+      console.error('Error creating/updating barber:', error)
+      setError(error.message || 'Failed to save barber')
+      setUploading(false)
+    }
   }
 
   const handleEdit = (barber: any) => {
