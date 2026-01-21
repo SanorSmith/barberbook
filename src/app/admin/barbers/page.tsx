@@ -37,12 +37,13 @@ export default function AdminBarbersPage() {
       .from('barbers')
       .select(`
         *,
-        profiles(username)
+        profiles!barbers_user_id_fkey(username)
       `)
       .order('name', { ascending: true })
 
     if (error) {
       console.error('Error loading barbers:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
     }
     
     console.log('Barbers data:', data)
