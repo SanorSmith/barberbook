@@ -188,10 +188,19 @@ This project is open source and available under the [MIT License](LICENSE).
 3. Add environment variables in Vercel dashboard
 4. Deploy!
 
+### AWS Deployment
+
+Deploy to AWS using multiple options:
+- **AWS Amplify** (Recommended) - Easiest with automatic CI/CD
+- **AWS App Runner** - Container-based with auto-scaling
+- **AWS ECS + Fargate** - Full container orchestration
+- **AWS EC2 + PM2** - Traditional server deployment
+
+📖 **[Complete AWS Deployment Guide](AWS_DEPLOYMENT.md)** - Step-by-step instructions for all options
+
 ### Other Platforms
 
 The app can be deployed to any platform that supports Next.js:
 - Netlify
-- AWS Amplify
 - Digital Ocean
 - Railway
