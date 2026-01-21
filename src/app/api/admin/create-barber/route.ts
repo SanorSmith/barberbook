@@ -110,27 +110,28 @@ export async function POST(request: Request) {
     
     const userId = authData.user.id
     
-    // Create profile
+    // Update profile (trigger already created it, so we update with additional fields)
+    // Using upsert to handle both cases: if trigger created it or if it doesn't exist
     const { error: profileError } = await supabase
       .from('profiles')
-      .insert({
+      .upsert({
         id: userId,
-        user_id: userId,
         email: email,
         full_name: fullName,
         role: 'barber',
         username: username,
         phone: phone || null,
-        municipality: 'Helsinki',
         password_changed: false
+      }, {
+        onConflict: 'id'
       })
     
     if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // Cleanup: delete auth user if profile creation fails
+      console.error('Profile update error:', profileError)
+      // Cleanup: delete auth user if profile update fails
       await adminClient.auth.admin.deleteUser(userId)
       return NextResponse.json({ 
-        error: `Failed to create profile: ${profileError.message}` 
+        error: `Failed to update profile: ${profileError.message}` 
       }, { status: 500 })
     }
     
