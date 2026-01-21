@@ -142,13 +142,9 @@ export async function POST(request: Request) {
       .from('barbers')
       .insert({
         user_id: userId,
-        profile_id: userId,
         name: fullName,
-        email: email,
-        phone: phone || null,
         bio: bio || null,
         specialties: specialties || [],
-        years_experience: yearsExperience || 0,
         image_url: imageUrl || null,
         is_active: true,
         rating: 0,
