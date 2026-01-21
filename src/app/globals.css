@@ -56,6 +56,18 @@ body {
   }
 }
 
+/* Hover preview slide in from left */
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Hero slice reveal animation */
 @keyframes sliceReveal {
   0% {
@@ -94,6 +106,17 @@ body {
   }
   
   @keyframes slideInFromRight {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slideInFromLeft {
     from {
       opacity: 1;
       transform: translateX(0);

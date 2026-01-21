@@ -19,8 +19,8 @@ export default function Navbar() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 })
-  const navRef = useRef<HTMLDivElement>(null)
+  const [hoverPreview, setHoverPreview] = useState<'barbers' | 'services' | null>(null)
+  const [currentServiceImage, setCurrentServiceImage] = useState(0)
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -64,53 +64,30 @@ export default function Navbar() {
     return role === 'admin' ? '/admin' : role === 'barber' ? '/barber' : '/dashboard'
   }
 
-  const updateIndicator = (targetElement?: HTMLElement) => {
-    if (!navRef.current) return
+  // Haircut model images for services carousel
+  const haircutImages = [
+    'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400',
+    'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400',
+    'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400',
+    'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400'
+  ]
 
-    const navLinks = navRef.current.querySelectorAll('a[data-nav-link]')
-    let activeLink: HTMLElement | null = null
-
-    if (targetElement) {
-      activeLink = targetElement
-    } else {
-      // Find active link based on current pathname
-      navLinks.forEach((link) => {
-        const href = link.getAttribute('href')
-        if (href && (href === pathname || (href !== '/' && pathname.startsWith(href)))) {
-          activeLink = link as HTMLElement
-        }
-      })
-    }
-
-    if (activeLink) {
-      const navRect = navRef.current.getBoundingClientRect()
-      const linkRect = activeLink.getBoundingClientRect()
-      
-      setIndicatorStyle({
-        left: linkRect.left - navRect.left,
-        width: linkRect.width,
-        opacity: 1
-      })
-    } else {
-      setIndicatorStyle({ left: 0, width: 0, opacity: 0 })
-    }
-  }
-
+  // Auto-change service images
   useEffect(() => {
-    // Update indicator when pathname changes
-    const timer = setTimeout(() => {
-      updateIndicator()
-    }, 100)
+    if (hoverPreview === 'services') {
+      const interval = setInterval(() => {
+        setCurrentServiceImage((prev) => (prev + 1) % haircutImages.length)
+      }, 1500)
+      return () => clearInterval(interval)
+    }
+  }, [hoverPreview])
 
-    return () => clearTimeout(timer)
-  }, [pathname, user])
-
+  // Reset service image when hover ends
   useEffect(() => {
-    // Update indicator on window resize
-    const handleResize = () => updateIndicator()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [pathname, user])
+    if (hoverPreview !== 'services') {
+      setCurrentServiceImage(0)
+    }
+  }, [hoverPreview])
 
   return (
     <nav className="fixed w-full z-50 transition-all duration-300 bg-obsidian/80 backdrop-blur-xl border-b border-white/5">
@@ -137,15 +114,14 @@ export default function Navbar() {
           
           {/* Desktop Menu */}
           <div className="hidden md:block">
-            <div ref={navRef} className="ml-10 flex items-baseline space-x-8 relative">
+            <div className="ml-10 flex items-baseline space-x-8">
               {/* Show public pages for guests and customers */}
               {(!user || user.role === 'customer') && (
                 <>
                   <Link 
                     href="/services" 
-                    data-nav-link
-                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
-                    onMouseLeave={() => updateIndicator()}
+                    onMouseEnter={() => setHoverPreview('services')}
+                    onMouseLeave={() => setHoverPreview(null)}
                     className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
                     style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '0ms' }}
                   >
@@ -153,9 +129,8 @@ export default function Navbar() {
                   </Link>
                   <Link 
                     href="/barbers" 
-                    data-nav-link
-                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
-                    onMouseLeave={() => updateIndicator()}
+                    onMouseEnter={() => setHoverPreview('barbers')}
+                    onMouseLeave={() => setHoverPreview(null)}
                     className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
                     style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '80ms' }}
                   >
@@ -163,9 +138,6 @@ export default function Navbar() {
                   </Link>
                   <Link 
                     href="/about" 
-                    data-nav-link
-                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
-                    onMouseLeave={() => updateIndicator()}
                     className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
                     style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '160ms' }}
                   >
@@ -173,9 +145,6 @@ export default function Navbar() {
                   </Link>
                   <Link 
                     href="/contact" 
-                    data-nav-link
-                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
-                    onMouseLeave={() => updateIndicator()}
                     className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
                     style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '240ms' }}
                   >
@@ -188,25 +157,12 @@ export default function Navbar() {
               {user && user.role === 'customer' && (
                 <Link 
                   href="/dashboard" 
-                  data-nav-link
-                  onMouseEnter={(e) => updateIndicator(e.currentTarget)}
-                  onMouseLeave={() => updateIndicator()}
                   className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
                   style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '320ms' }}
                 >
                   My Bookings
                 </Link>
               )}
-              
-              {/* Sliding Indicator */}
-              <div
-                className="absolute bottom-0 left-0 h-0.5 bg-gold transition-all duration-300 ease-out pointer-events-none"
-                style={{
-                  transform: `translateX(${indicatorStyle.left}px)`,
-                  width: `${indicatorStyle.width}px`,
-                  opacity: indicatorStyle.opacity
-                }}
-              />
             </div>
           </div>
 
@@ -421,6 +377,71 @@ export default function Navbar() {
                 Book Now
               </Link>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Hover Preview - Barbers */}
+      {hoverPreview === 'barbers' && (
+        <div 
+          className="fixed left-0 top-20 w-96 bg-obsidian/95 backdrop-blur-xl border border-gold/20 rounded-r-2xl shadow-2xl p-6 z-40"
+          style={{ animation: 'slideInFromLeft 0.3s ease-out forwards' }}
+          onMouseEnter={() => setHoverPreview('barbers')}
+          onMouseLeave={() => setHoverPreview(null)}
+        >
+          <h3 className="text-gold font-serif text-xl mb-4">Our Barbers</h3>
+          <div className="space-y-3">
+            {[
+              { name: "Marcus Williams", image: "https://images.unsplash.com/photo-1567894340315-735d7c361db0?w=200", specialty: "Fades & Designs" },
+              { name: "James Chen", image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=200", specialty: "Beards & Hot Shaves" },
+              { name: "David Thompson", image: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=200", specialty: "Modern Styles" }
+            ].map((barber, index) => (
+              <div key={index} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gold/10 transition-colors">
+                <img 
+                  src={barber.image} 
+                  alt={barber.name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-gold/30"
+                />
+                <div>
+                  <p className="text-cream font-medium">{barber.name}</p>
+                  <p className="text-sm text-slate">{barber.specialty}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Hover Preview - Services */}
+      {hoverPreview === 'services' && (
+        <div 
+          className="fixed left-0 top-20 w-96 bg-obsidian/95 backdrop-blur-xl border border-gold/20 rounded-r-2xl shadow-2xl p-6 z-40"
+          style={{ animation: 'slideInFromLeft 0.3s ease-out forwards' }}
+          onMouseEnter={() => setHoverPreview('services')}
+          onMouseLeave={() => setHoverPreview(null)}
+        >
+          <h3 className="text-gold font-serif text-xl mb-4">Haircut Styles</h3>
+          <div className="relative w-full h-64 rounded-lg overflow-hidden">
+            {haircutImages.map((image, index) => (
+              <img
+                key={index}
+                src={image}
+                alt={`Haircut style ${index + 1}`}
+                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+                  index === currentServiceImage ? 'opacity-100' : 'opacity-0'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="flex justify-center space-x-2 mt-4">
+            {haircutImages.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentServiceImage ? 'bg-gold w-6' : 'bg-slate'
+                }`}
+              />
+            ))}
           </div>
         </div>
       )}
