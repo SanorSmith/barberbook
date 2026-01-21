@@ -116,6 +116,7 @@ export async function POST(request: Request) {
       .from('profiles')
       .upsert({
         id: userId,
+        user_id: userId,
         email: email,
         full_name: fullName,
         role: 'barber',
