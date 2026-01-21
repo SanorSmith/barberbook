@@ -14,10 +14,82 @@ Complete barber shop management system built with Next.js and Supabase.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **UI Components**: Custom components with modern design
-- **Deployment**: Ready for Vercel/Netlify
+### 🚀 **Frontend Framework**
+- **Next.js 14.2.35** - React framework with App Router
+- **React 18** - UI library with hooks and modern patterns
+- **TypeScript 5** - Type-safe JavaScript development
+
+### 🎨 **Styling & UI**
+- **Tailwind CSS 3.4.1** - Utility-first CSS framework
+- **PostCSS 8** - CSS transformation tool
+- **Custom Design System** - Dark theme with gold accents
+- **Responsive Design** - Mobile-first approach
+- **Custom Fonts** - Playfair Display (serif) & Inter (sans-serif)
+
+### 🌐 **Backend & Database**
+- **Supabase** - Backend-as-a-Service platform
+  - **PostgreSQL** - Primary database with RLS policies
+  - **Supabase Auth** - User authentication & JWT tokens
+  - **Supabase Storage** - File storage for images
+  - **Supabase Realtime** - Real-time subscriptions
+- **@supabase/supabase-js 2.89.0** - JavaScript client library
+- **@supabase/ssr 0.8.0** - Server-side rendering support
+
+### 🔐 **Security & Authentication**
+- **Row Level Security (RLS)** - Database-level access control
+- **JWT Authentication** - Token-based auth with refresh
+- **Role-Based Access Control** - Customer, Barber, Admin roles
+- **Middleware Protection** - Route-level authentication
+- **Service Role API** - Admin operations with elevated permissions
+
+### 📱 **Progressive Web App (PWA)**
+- **next-pwa 5.6.0** - PWA configuration for Next.js
+- **Service Worker** - Offline caching and background sync
+- **Web App Manifest** - Native app-like experience
+- **Cache Strategies** - Optimized performance with multiple caching strategies
+
+### 🌍 **Internationalization**
+- **next-intl 4.7.0** - Internationalization framework
+- **Multi-language Support** - Ready for multiple languages
+- **Locale-based Routing** - URL-based language switching
+
+### 🛠️ **Development Tools**
+- **ESLint 8** - Code linting and quality checks
+- **TypeScript Compiler** - Type checking and compilation
+- **Next.js Dev Server** - Hot module replacement
+- **Environment Variables** - Configuration management
+- **dotenv 17.2.3** - Environment variable loading
+
+### 🎯 **Features & Architecture**
+- **App Router** - Modern Next.js routing system
+- **Server Components** - Server-side rendering by default
+- **Client Components** - Interactive UI components
+- **API Routes** - Backend API endpoints
+- **Middleware** - Request interception and auth
+- **Image Optimization** - Next.js Image component with CDN
+- **Component Architecture** - Reusable UI components
+
+### 📊 **Data Management**
+- **React Hooks** - State management (useState, useEffect)
+- **Supabase Queries** - Database operations
+- **Real-time Subscriptions** - Live data updates
+- **File Uploads** - Image storage and optimization
+- **Form Handling** - Controlled components and validation
+
+### 🚀 **Deployment & Performance**
+- **Vercel Ready** - Optimized for Vercel deployment
+- **Static Generation** - Pre-rendered pages where possible
+- **Incremental Static Regeneration** - Updated static content
+- **Image CDN** - Optimized image delivery
+- **Code Splitting** - Automatic bundle optimization
+
+### 🎨 **UI/UX Features**
+- **Dark Theme** - Professional dark color scheme
+- **Custom Color Palette** - Obsidian, Charcoal, Gold accents
+- **Responsive Grid System** - Tailwind's responsive utilities
+- **Interactive Components** - Modals, forms, cards
+- **Loading States** - Skeleton loaders and spinners
+- **Error Handling** - User-friendly error messages
 
 ## Getting Started
 
