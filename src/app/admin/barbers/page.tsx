@@ -35,7 +35,10 @@ export default function AdminBarbersPage() {
   const loadBarbers = async () => {
     const { data } = await supabase
       .from('barbers')
-      .select('*')
+      .select(`
+        *,
+        profiles!inner(username)
+      `)
       .order('name', { ascending: true })
 
     setBarbers(data || [])
@@ -168,14 +171,20 @@ export default function AdminBarbersPage() {
 
   const handleEdit = (barber: any) => {
     setEditingBarber(barber)
+    const [firstName, ...lastNameParts] = barber.name.split(' ')
+    const lastName = lastNameParts.join(' ')
+    
     setFormData({
-      name: barber.name,
-      role: barber.role,
+      firstName: firstName || '',
+      lastName: lastName || '',
+      email: barber.email || '',
+      phone: barber.phone || '',
+      role: barber.role || 'Senior Barber',
       bio: barber.bio || '',
-      experience: barber.experience || '',
+      yearsExperience: barber.years_experience?.toString() || '',
       image_url: barber.image_url || '',
       specialties: Array.isArray(barber.specialties) ? barber.specialties.join(', ') : '',
-      is_active: barber.is_active
+      is_active: barber.is_active !== undefined ? barber.is_active : true
     })
     setImageFile(null)
     setImagePreview(barber.image_url || null)
@@ -219,11 +228,15 @@ export default function AdminBarbersPage() {
             setEditingBarber(null)
             setImageFile(null)
             setImagePreview(null)
+            setError(null)
             setFormData({
-              name: '',
+              firstName: '',
+              lastName: '',
+              email: '',
+              phone: '',
               role: 'Senior Barber',
               bio: '',
-              experience: '',
+              yearsExperience: '',
               image_url: '',
               specialties: '',
               is_active: true
@@ -254,6 +267,9 @@ export default function AdminBarbersPage() {
               <div className="flex-1">
                 <h3 className="text-cream font-semibold text-lg">{barber.name}</h3>
                 <p className="text-silver text-sm">{barber.role}</p>
+                {barber.profiles?.username && (
+                  <p className="text-gold text-xs font-mono mt-1">@{barber.profiles.username}</p>
+                )}
                 <div className="flex items-center gap-2 mt-2">
                   <span className="text-gold">★</span>
                   <span className="text-silver text-sm">{barber.rating || 0} ({barber.review_count || 0})</span>
@@ -314,14 +330,68 @@ export default function AdminBarbersPage() {
             </h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Error Display */}
+              {error && (
+                <div className="p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
+                  {error}
+                </div>
+              )}
+
+              {/* First Name and Last Name - Only for new barbers */}
+              {!editingBarber && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-silver text-sm mb-2">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-silver text-sm mb-2">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Email - Only for new barbers */}
+              {!editingBarber && (
+                <div>
+                  <label className="block text-silver text-sm mb-2">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Phone */}
               <div>
-                <label className="block text-silver text-sm mb-2">Full Name</label>
+                <label className="block text-silver text-sm mb-2">Phone (Optional)</label>
                 <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
-                  required
+                  placeholder="+358 40 123 4567"
                 />
               </div>
 
@@ -333,7 +403,6 @@ export default function AdminBarbersPage() {
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
                   placeholder="e.g. Senior Barber, Master Barber"
-                  required
                 />
               </div>
 
@@ -349,13 +418,14 @@ export default function AdminBarbersPage() {
               </div>
 
               <div>
-                <label className="block text-silver text-sm mb-2">Experience</label>
+                <label className="block text-silver text-sm mb-2">Years of Experience</label>
                 <input
-                  type="text"
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                  type="number"
+                  value={formData.yearsExperience}
+                  onChange={(e) => setFormData({ ...formData, yearsExperience: e.target.value })}
                   className="w-full bg-obsidian border border-slate rounded-lg px-4 py-3 text-cream focus:border-gold outline-none"
-                  placeholder="e.g. 10+ years"
+                  placeholder="e.g. 10"
+                  min="0"
                 />
               </div>
 
@@ -436,6 +506,17 @@ export default function AdminBarbersPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Credentials Modal */}
+      {credentials && (
+        <BarberCredentialsModal
+          credentials={credentials}
+          onClose={() => {
+            setCredentials(null)
+            loadBarbers()
+          }}
+        />
       )}
     </div>
   )

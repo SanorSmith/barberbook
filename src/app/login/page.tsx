@@ -21,11 +21,28 @@ function LoginForm() {
     setError(null)
 
     try {
-      // Normalize email to lowercase
-      const normalizedEmail = email.toLowerCase().trim()
+      let emailToUse = email.toLowerCase().trim()
+
+      // Check if input is username (no @ symbol)
+      if (!emailToUse.includes('@')) {
+        // Lookup email from username
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', emailToUse)
+          .single()
+
+        if (profileError || !profile) {
+          setError('Username not found')
+          setLoading(false)
+          return
+        }
+
+        emailToUse = profile.email
+      }
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
+        email: emailToUse,
         password,
       })
 
@@ -105,17 +122,18 @@ function LoginForm() {
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs text-silver uppercase tracking-wider mb-1">Email Address</label>
+              <label className="block text-xs text-silver uppercase tracking-wider mb-1">Email or Username</label>
               <div className="relative">
                 <input 
-                  type="email" 
+                  type="text" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-charcoal border border-slate rounded-lg p-3 pl-10 text-cream focus:border-gold outline-none transition-colors"
+                  placeholder="email@example.com or username"
                   required
                 />
                 <svg className="absolute left-3 top-3.5 w-4 h-4 text-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
             </div>
