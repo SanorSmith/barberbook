@@ -32,8 +32,11 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Protected routes that require authentication
-  const protectedRoutes = ['/booking', '/dashboard', '/barber', '/admin']
+  const protectedRoutes = ['/booking', '/dashboard', '/admin']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  
+  // Barber dashboard routes (separate check to avoid catching /barbers)
+  const isBarberDashboard = pathname === '/barber' || pathname.startsWith('/barber/')
 
   // Auth routes that logged-in users shouldn't access
   const authRoutes = ['/login', '/register']
@@ -54,14 +57,14 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If accessing protected route without authentication, redirect to login
-  if (!user && isProtectedRoute) {
+  if (!user && (isProtectedRoute || isBarberDashboard)) {
     const redirectUrl = new URL('/login', request.url)
     redirectUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
   // If user is authenticated and accessing protected routes, check role-based access
-  if (user && isProtectedRoute) {
+  if (user && (isProtectedRoute || isBarberDashboard)) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -78,8 +81,8 @@ export async function updateSession(request: NextRequest) {
       return response
     }
 
-    // Barber route protection - barbers and admins only
-    if (pathname.startsWith('/barber') && role !== 'barber' && role !== 'admin') {
+    // Barber dashboard protection - barbers and admins only (excludes /barbers page)
+    if (isBarberDashboard && role !== 'barber' && role !== 'admin') {
       const response = NextResponse.redirect(new URL('/dashboard', request.url))
       response.cookies.set('access-denied', 'true', { maxAge: 5 })
       return response
