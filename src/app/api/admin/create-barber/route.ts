@@ -122,6 +122,7 @@ export async function POST(request: Request) {
         role: 'barber',
         username: username,
         phone: phone || null,
+        municipality: 'Helsinki',
         password_changed: false
       }, {
         onConflict: 'id'
