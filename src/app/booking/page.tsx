@@ -8,7 +8,7 @@ import { getAllBarbers, type Barber } from '@/lib/barbers'
 import { getAvailableSlots, type TimeSlot } from '@/lib/availability'
 import { createBooking } from '@/lib/bookings'
 
-function BookingPageContent() {
+function BookingContent() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [services, setServices] = useState<Service[]>([])
   const [barbers, setBarbers] = useState<Barber[]>([])
@@ -522,8 +522,15 @@ function BookingPageContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<div>Loading booking...</div>}>
-      <BookingPageContent />
+    <Suspense fallback={
+      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-cream">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BookingContent />
     </Suspense>
   )
 }
