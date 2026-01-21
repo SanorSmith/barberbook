@@ -65,16 +65,25 @@ export async function updateSession(request: NextRequest) {
 
   // If user is authenticated and accessing protected routes, check role-based access
   if (user && (isProtectedRoute || isBarberDashboard)) {
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    console.log('=== MIDDLEWARE DEBUG ===')
+    console.log('Path:', pathname)
+    console.log('User ID:', user.id)
+    console.log('Profile error:', profileError)
+    console.log('Profile data:', profile)
+    console.log('Role:', profile?.role)
+
     const role = profile?.role || 'customer'
+    console.log('Final role (with fallback):', role)
 
     // Admin route protection - only admins
     if (pathname.startsWith('/admin') && role !== 'admin') {
+      console.log('BLOCKING: Non-admin trying to access admin route')
       const redirectUrl = role === 'barber' ? '/barber' : '/dashboard'
       const response = NextResponse.redirect(new URL(redirectUrl, request.url))
       response.cookies.set('access-denied', 'true', { maxAge: 5 })
@@ -83,6 +92,7 @@ export async function updateSession(request: NextRequest) {
 
     // Barber dashboard protection - barbers and admins only (excludes /barbers page)
     if (isBarberDashboard && role !== 'barber' && role !== 'admin') {
+      console.log('BLOCKING: Non-barber trying to access barber dashboard')
       const response = NextResponse.redirect(new URL('/dashboard', request.url))
       response.cookies.set('access-denied', 'true', { maxAge: 5 })
       return response
@@ -90,12 +100,17 @@ export async function updateSession(request: NextRequest) {
 
     // Customer dashboard - redirect admins and barbers to their dashboards
     if (pathname.startsWith('/dashboard') && role === 'admin') {
+      console.log('REDIRECTING: Admin from /dashboard to /admin')
       return NextResponse.redirect(new URL('/admin', request.url))
     }
 
     if (pathname.startsWith('/dashboard') && role === 'barber') {
+      console.log('REDIRECTING: Barber from /dashboard to /barber')
       return NextResponse.redirect(new URL('/barber', request.url))
     }
+
+    console.log('ALLOWING: Access to', pathname)
+    console.log('=== END MIDDLEWARE DEBUG ===')
   }
 
   return supabaseResponse
