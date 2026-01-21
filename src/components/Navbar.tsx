@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import LanguageSwitcher from './LanguageSwitcher'
@@ -18,6 +19,9 @@ export default function Navbar() {
   const [user, setUser] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 })
+  const navRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
 
@@ -60,6 +64,54 @@ export default function Navbar() {
     return role === 'admin' ? '/admin' : role === 'barber' ? '/barber' : '/dashboard'
   }
 
+  const updateIndicator = (targetElement?: HTMLElement) => {
+    if (!navRef.current) return
+
+    const navLinks = navRef.current.querySelectorAll('a[data-nav-link]')
+    let activeLink: HTMLElement | null = null
+
+    if (targetElement) {
+      activeLink = targetElement
+    } else {
+      // Find active link based on current pathname
+      navLinks.forEach((link) => {
+        const href = link.getAttribute('href')
+        if (href && (href === pathname || (href !== '/' && pathname.startsWith(href)))) {
+          activeLink = link as HTMLElement
+        }
+      })
+    }
+
+    if (activeLink) {
+      const navRect = navRef.current.getBoundingClientRect()
+      const linkRect = activeLink.getBoundingClientRect()
+      
+      setIndicatorStyle({
+        left: linkRect.left - navRect.left,
+        width: linkRect.width,
+        opacity: 1
+      })
+    } else {
+      setIndicatorStyle({ left: 0, width: 0, opacity: 0 })
+    }
+  }
+
+  useEffect(() => {
+    // Update indicator when pathname changes
+    const timer = setTimeout(() => {
+      updateIndicator()
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [pathname, user])
+
+  useEffect(() => {
+    // Update indicator on window resize
+    const handleResize = () => updateIndicator()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [pathname, user])
+
   return (
     <nav className="fixed w-full z-50 transition-all duration-300 bg-obsidian/80 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -70,21 +122,45 @@ export default function Navbar() {
           </Link>
           
           {/* Desktop Menu */}
-          <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-8">
+          <div className="hidden md:block relative">
+            <div ref={navRef} className="ml-10 flex items-baseline space-x-8">
               {/* Show public pages for guests and customers */}
               {(!user || user.role === 'customer') && (
                 <>
-                  <Link href="/services" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                  <Link 
+                    href="/services" 
+                    data-nav-link
+                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
+                    onMouseLeave={() => updateIndicator()}
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                  >
                     Services
                   </Link>
-                  <Link href="/barbers" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                  <Link 
+                    href="/barbers" 
+                    data-nav-link
+                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
+                    onMouseLeave={() => updateIndicator()}
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                  >
                     Barbers
                   </Link>
-                  <Link href="/about" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                  <Link 
+                    href="/about" 
+                    data-nav-link
+                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
+                    onMouseLeave={() => updateIndicator()}
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                  >
                     About
                   </Link>
-                  <Link href="/contact" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                  <Link 
+                    href="/contact" 
+                    data-nav-link
+                    onMouseEnter={(e) => updateIndicator(e.currentTarget)}
+                    onMouseLeave={() => updateIndicator()}
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                  >
                     Contact
                   </Link>
                 </>
@@ -92,10 +168,26 @@ export default function Navbar() {
               
               {/* Customer-specific links */}
               {user && user.role === 'customer' && (
-                <Link href="/dashboard" className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide">
+                <Link 
+                  href="/dashboard" 
+                  data-nav-link
+                  onMouseEnter={(e) => updateIndicator(e.currentTarget)}
+                  onMouseLeave={() => updateIndicator()}
+                  className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                >
                   My Bookings
                 </Link>
               )}
+              
+              {/* Sliding Indicator */}
+              <div
+                className="absolute bottom-0 h-0.5 bg-gold transition-all duration-300 ease-out"
+                style={{
+                  left: `${indicatorStyle.left}px`,
+                  width: `${indicatorStyle.width}px`,
+                  opacity: indicatorStyle.opacity
+                }}
+              />
             </div>
           </div>
 

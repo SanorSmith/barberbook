@@ -4,19 +4,41 @@ import { services, barbers } from '@/lib/data'
 import ServiceCard from '@/components/ServiceCard'
 import BarberCard from '@/components/BarberCard'
 
+// Animated Hero Background Component
+function AnimatedHeroBackground() {
+  const sliceCount = 20
+  const slices = Array.from({ length: sliceCount }, (_, i) => i)
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {slices.map((index) => (
+        <div
+          key={index}
+          className="absolute inset-y-0 bg-cover bg-center animate-gpu"
+          style={{
+            left: `${(index / sliceCount) * 100}%`,
+            width: `${100 / sliceCount}%`,
+            backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920)',
+            backgroundPosition: `${(index / sliceCount) * 100}% center`,
+            animation: `sliceReveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+            animationDelay: `${index * 0.05}s`,
+            animationFillMode: 'both',
+            transform: 'translateY(-100%)',
+            opacity: 0
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function Home() {
   return (
     <>
       {/* Hero Section */}
       <div className="relative h-screen -mt-20">
         <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <Image
-          src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920"
-          alt="Barber Shop"
-          fill
-          className="object-cover"
-          priority
-        />
+        <AnimatedHeroBackground />
         <div className="relative z-20 h-full flex flex-col justify-center items-center text-center px-4">
           <p className="text-gold tracking-[0.2em] text-sm font-semibold mb-4">ESTABLISHED 2024</p>
           <h1 className="font-serif text-5xl md:text-6xl font-semibold text-cream mb-6 tracking-tight">

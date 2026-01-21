@@ -25,3 +25,68 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Animation Keyframes */
+@keyframes sliceReveal {
+  0% {
+    transform: translateY(-100%) scale(0.8);
+    opacity: 0;
+    filter: blur(2px);
+  }
+  50% {
+    transform: translateY(0) scale(1.02);
+    opacity: 0.9;
+    filter: blur(0.5px);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* Alternative animation for variety */
+@keyframes sliceSlideIn {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes sliceReveal {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      filter: blur(0);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+  
+  @keyframes sliceSlideIn {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+}
+
+/* Performance optimizations */
+.animate-gpu {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
