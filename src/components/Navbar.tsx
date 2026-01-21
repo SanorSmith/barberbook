@@ -117,8 +117,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center">
-            <span className="font-serif text-2xl font-semibold tracking-tight text-gold inline-flex items-center" style={{ perspective: '1000px' }}>
+          <Link href="/" className="flex-shrink-0">
+            <span className="font-serif text-2xl font-semibold tracking-tight text-gold inline-flex" style={{ perspective: '1000px', lineHeight: '1' }}>
               {'BARBERBOOK'.split('').map((char, index) => (
                 <span
                   key={index}
@@ -126,7 +126,8 @@ export default function Navbar() {
                   style={{
                     animation: 'zoomFlipIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
                     animationDelay: `${index * 0.08}s`,
-                    transformStyle: 'preserve-3d'
+                    transformStyle: 'preserve-3d',
+                    lineHeight: '1'
                   }}
                 >
                   {char}
@@ -137,7 +138,7 @@ export default function Navbar() {
           
           {/* Desktop Menu */}
           <div className="hidden md:block relative">
-            <div ref={navRef} className="ml-10 flex items-baseline space-x-8">
+            <div ref={navRef} className="ml-10 flex items-center space-x-8">
               {/* Show public pages for guests and customers */}
               {(!user || user.role === 'customer') && (
                 <>
