@@ -118,7 +118,21 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <span className="font-serif text-2xl font-semibold tracking-tight text-gold">BARBERBOOK</span>
+            <span className="font-serif text-2xl font-semibold tracking-tight text-gold inline-flex" style={{ perspective: '1000px' }}>
+              {'BARBERBOOK'.split('').map((char, index) => (
+                <span
+                  key={index}
+                  className="inline-block opacity-0"
+                  style={{
+                    animation: 'zoomFlipIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
+                    animationDelay: `${index * 0.08}s`,
+                    transformStyle: 'preserve-3d'
+                  }}
+                >
+                  {char}
+                </span>
+              ))}
+            </span>
           </Link>
           
           {/* Desktop Menu */}

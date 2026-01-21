@@ -28,6 +28,22 @@ body {
 
 /* Animation Keyframes */
 
+/* Logo character zoom and flip animation */
+@keyframes zoomFlipIn {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotateX(180deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2) rotateX(90deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateX(0deg);
+  }
+}
+
 /* Navbar entrance animation from right */
 @keyframes slideInFromRight {
   from {
@@ -66,6 +82,17 @@ body {
 
 /* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
+  @keyframes zoomFlipIn {
+    0% {
+      opacity: 1;
+      transform: scale(1) rotateX(0deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotateX(0deg);
+    }
+  }
+  
   @keyframes slideInFromRight {
     from {
       opacity: 1;
