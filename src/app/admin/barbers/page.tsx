@@ -53,14 +53,19 @@ export default function AdminBarbersPage() {
       if (userIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, username')
+          .select('id, username, email, phone')
           .in('id', userIds)
 
-        // Merge profiles data with barbers
-        const barbersWithProfiles = barbersData.map(barber => ({
-          ...barber,
-          profiles: profilesData?.find(p => p.id === barber.user_id) || null
-        }))
+        // Merge profiles data with barbers (flatten email and phone to barber level)
+        const barbersWithProfiles = barbersData.map(barber => {
+          const profile = profilesData?.find(p => p.id === barber.user_id)
+          return {
+            ...barber,
+            email: profile?.email || '',
+            phone: profile?.phone || '',
+            profiles: profile || null
+          }
+        })
         
         console.log('Barbers with profiles:', barbersWithProfiles)
         setBarbers(barbersWithProfiles)
