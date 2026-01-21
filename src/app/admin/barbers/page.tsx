@@ -33,7 +33,7 @@ export default function AdminBarbersPage() {
   }, [])
 
   const loadBarbers = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('barbers')
       .select(`
         *,
@@ -41,6 +41,11 @@ export default function AdminBarbersPage() {
       `)
       .order('name', { ascending: true })
 
+    if (error) {
+      console.error('Error loading barbers:', error)
+    }
+    
+    console.log('Barbers data:', data)
     setBarbers(data || [])
     setLoading(false)
   }
