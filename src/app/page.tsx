@@ -6,27 +6,32 @@ import BarberCard from '@/components/BarberCard'
 
 // Animated Hero Background Component
 function AnimatedHeroBackground() {
-  const sliceCount = 20
+  const sliceCount = 12
   const slices = Array.from({ length: sliceCount }, (_, i) => i)
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 flex">
       {slices.map((index) => (
         <div
           key={index}
-          className="absolute inset-y-0 bg-cover bg-center animate-gpu"
+          className="relative flex-1 overflow-hidden animate-gpu"
           style={{
-            left: `${(index / sliceCount) * 100}%`,
-            width: `${100 / sliceCount}%`,
-            backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920)',
-            backgroundPosition: `${(index / sliceCount) * 100}% center`,
-            animation: `sliceReveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
-            animationDelay: `${index * 0.05}s`,
+            animation: `sliceReveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards`,
+            animationDelay: `${index * 0.06}s`,
             animationFillMode: 'both',
             transform: 'translateY(-100%)',
             opacity: 0
           }}
-        />
+        >
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: 'url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1920)',
+              backgroundPosition: `${(index / (sliceCount - 1)) * 100}% center`,
+              backgroundSize: `${sliceCount * 100}% 100%`
+            }}
+          />
+        </div>
       ))}
     </div>
   )

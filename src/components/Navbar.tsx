@@ -132,7 +132,8 @@ export default function Navbar() {
                     data-nav-link
                     onMouseEnter={(e) => updateIndicator(e.currentTarget)}
                     onMouseLeave={() => updateIndicator()}
-                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
+                    style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '0ms' }}
                   >
                     Services
                   </Link>
@@ -141,7 +142,8 @@ export default function Navbar() {
                     data-nav-link
                     onMouseEnter={(e) => updateIndicator(e.currentTarget)}
                     onMouseLeave={() => updateIndicator()}
-                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
+                    style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '80ms' }}
                   >
                     Barbers
                   </Link>
@@ -150,7 +152,8 @@ export default function Navbar() {
                     data-nav-link
                     onMouseEnter={(e) => updateIndicator(e.currentTarget)}
                     onMouseLeave={() => updateIndicator()}
-                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
+                    style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '160ms' }}
                   >
                     About
                   </Link>
@@ -159,7 +162,8 @@ export default function Navbar() {
                     data-nav-link
                     onMouseEnter={(e) => updateIndicator(e.currentTarget)}
                     onMouseLeave={() => updateIndicator()}
-                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                    className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
+                    style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '240ms' }}
                   >
                     Contact
                   </Link>
@@ -173,7 +177,8 @@ export default function Navbar() {
                   data-nav-link
                   onMouseEnter={(e) => updateIndicator(e.currentTarget)}
                   onMouseLeave={() => updateIndicator()}
-                  className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide"
+                  className="hover:text-gold transition-colors duration-200 text-sm font-medium tracking-wide opacity-0"
+                  style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '320ms' }}
                 >
                   My Bookings
                 </Link>
@@ -193,10 +198,12 @@ export default function Navbar() {
 
           {/* Right Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <LanguageSwitcher />
+            <div className="opacity-0" style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '320ms' }}>
+              <LanguageSwitcher />
+            </div>
             {!loading && (
               user ? (
-                <div className="relative">
+                <div className="relative opacity-0" style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '400ms' }}>
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                     className="flex items-center space-x-2 text-sm font-medium hover:text-gold transition-colors"
@@ -268,7 +275,7 @@ export default function Navbar() {
                   )}
                 </div>
               ) : (
-                <Link href="/login" className="text-sm font-medium hover:text-gold transition-colors">
+                <Link href="/login" className="text-sm font-medium hover:text-gold transition-colors opacity-0" style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '400ms' }}>
                   Login
                 </Link>
               )
@@ -277,7 +284,8 @@ export default function Navbar() {
             {(!user || user.role === 'customer') && (
               <Link 
                 href="/booking" 
-                className="bg-gold hover:bg-gold-hover text-obsidian px-6 py-2.5 rounded-lg text-sm font-medium uppercase tracking-wider transition-transform hover:scale-105"
+                className="bg-gold hover:bg-gold-hover text-obsidian px-6 py-2.5 rounded-lg text-sm font-medium uppercase tracking-wider transition-transform hover:scale-105 opacity-0"
+                style={{ animation: 'slideInFromRight 0.4s ease-out forwards', animationDelay: '480ms' }}
               >
                 Book Now
               </Link>
