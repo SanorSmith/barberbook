@@ -21,24 +21,13 @@ function LoginForm() {
     setError(null)
 
     try {
-      let emailToUse = email.toLowerCase().trim()
+      const emailToUse = email.toLowerCase().trim()
 
-      // Check if input is username (no @ symbol)
+      // Validate email format
       if (!emailToUse.includes('@')) {
-        // Lookup email from username
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', emailToUse)
-          .single()
-
-        if (profileError || !profile) {
-          setError('Username not found')
-          setLoading(false)
-          return
-        }
-
-        emailToUse = profile.email
+        setError('Please enter a valid email address')
+        setLoading(false)
+        return
       }
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -137,14 +126,14 @@ function LoginForm() {
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs text-silver uppercase tracking-wider mb-1">Email or Username</label>
+              <label className="block text-xs text-silver uppercase tracking-wider mb-1">Email</label>
               <div className="relative">
                 <input 
-                  type="text" 
+                  type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-charcoal border border-slate rounded-lg p-3 pl-10 text-cream focus:border-gold outline-none transition-colors"
-                  placeholder="email@example.com or username"
+                  placeholder="email@example.com"
                   required
                 />
                 <svg className="absolute left-3 top-3.5 w-4 h-4 text-silver" fill="none" stroke="currentColor" viewBox="0 0 24 24">
