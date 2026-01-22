@@ -2,6 +2,14 @@
 
 Complete barber shop management system built with Next.js and Supabase.
 
+## 🚀 Live Demo
+
+**[🔗 View Live App](https://main.d3qngrpcbcukgy.amplifyapp.com)**
+
+- **Admin Dashboard:** [https://main.d3qngrpcbcukgy.amplifyapp.com/admin/barbers](https://main.d3qngrpcbcukgy.amplifyapp.com/admin/barbers)
+- **Customer Booking:** [https://main.d3qngrpcbcukgy.amplifyapp.com/booking](https://main.d3qngrpcbcukgy.amplifyapp.com/booking)
+- **Home Page:** [https://main.d3qngrpcbcukgy.amplifyapp.com](https://main.d3qngrpcbcukgy.amplifyapp.com)
+
 ## Features
 
 - 🔐 **User Authentication** - Login/Register with email verification
